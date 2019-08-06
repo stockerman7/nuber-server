@@ -1,0 +1,9 @@
+{
+  "name": "nuber-server",
+  "version": "1.0.0",
+  "description": "nuber server",
+  "main": "index.js",
+  "repository": "git@github.com:stockerman7/nuber-server.git",
+  "author": "JeongMin Lee",
+  "license": "MIT"
+}
