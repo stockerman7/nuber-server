@@ -10,7 +10,7 @@ const allTypes: GraphQLSchema[] = fileLoader(
 
 const allResolvers: any = fileLoader(
 	// ts 확장자를 안쓴이유는 나중에 js로 변환될 때 충돌을 피할 수 있다. 모든 파일들은 '배열'로 담긴다.
-	path.join(__dirname, "./api/**/*.resolver.*"),
+	path.join(__dirname, "./api/**/*.resolvers.*"),
 );
 
 // 모든 type, resolver 들을 하나로 합친다. 이것은 상호간의 연결을 신경쓰지 않도록 해준다.

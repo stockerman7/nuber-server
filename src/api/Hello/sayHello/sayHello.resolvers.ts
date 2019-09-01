@@ -1,10 +1,11 @@
-import { Greeting } from "../../../types/graph";
+// "src/types/graph.d.ts" 파일(typescript 화된 graphql query type 정의들을 모아논 곳) 불러온다.
+import { SayHelloQueryArgs, SayHelloResponse } from "../../../types/graph";
 
 const resolvers = {
 	Query: {
-		sayHello: (): Greeting => {
+		sayHello: (_, args: SayHelloQueryArgs): SayHelloResponse => {
 			return {
-				text: "love you",
+				text: `Hello ${args.name}`,
 				error: false,
 			};
 		},
