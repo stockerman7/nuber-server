@@ -1,1 +1,4 @@
 node_modules
+
+# dotenv environment variables file, 환경 변수는 보안을 위해 push 하지 않는다.
+.env

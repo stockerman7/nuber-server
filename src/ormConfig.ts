@@ -10,10 +10,10 @@ const connectionOptions: ConnectionOptions = {
 	logging: true,
 	// entities: 컴퓨터 세계에서 정보/의미의 최소 단위를 말한다. "*.*" 한 이유는 .js 나 .ts 가 될 수도 있다.
 	entities: ["entities/*.*"],
-	host: process.env.DB_ENDPOINT || "localhost", // 서버 host 주소
+	host: process.env.DB_ENDPOINT, // 서버 host 주소
 	port: 5432, // postgres 기본 포트
-	username: process.env.DB_USERNAME || "mins",
-	password: process.env.DB_PASSWORD || "",
+	username: process.env.DB_USERNAME,
+	password: process.env.DB_PASSWORD,
 };
 
 export default connectionOptions;
