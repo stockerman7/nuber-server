@@ -83,8 +83,11 @@ class User extends BaseEntity {
 			this.password = hasedPassword; // 암호화된 password 저장
 		}
 	}
-
-	// password를 암호화하는 private(접근제한) 함수, string 값을 hash 반환하는 Promise 타입
+	// 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
+	public comparePassword(password: string): Promise<boolean> {
+		return bcrypt.compare(password, this.password);
+	}
+	// password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
 	private hashPassword(password: string): Promise<string> {
 		return bcrypt.hash(password, BCRYPT_ROUND); // password 를 hash 화 한다. 두번째 매개변수는 몇번 암호화 할지 숫자
 	}
