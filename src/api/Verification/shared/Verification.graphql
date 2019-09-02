@@ -1,0 +1,11 @@
+# Verification: '확인'과정, 보통 Validation(검증)과 혼동되기도
+# 하지만 'Verification(확인)'은 내부적으로 확인 'Validation(검증)'은 외부에서 확인받는 것이라고 보면 된다.
+type Verification {
+	id: Int!
+	target: String!
+	payload: String! # payload: 데이터 전달시 헤더와 메타데이터와 같은 데이터는 제외하고 근본적인 목적이 되는 데이터 부분을 말함
+	key: String!
+	used: Boolean!
+	createAt: String!
+	updateAt: String!
+}
