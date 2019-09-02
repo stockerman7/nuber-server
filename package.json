@@ -7,6 +7,7 @@
 	"author": "JeongMin Lee <stockerman7@gmail.com>",
 	"license": "MIT",
 	"devDependencies": {
+		"@types/bcrypt": "^3.0.0",
 		"@types/cors": "^2.8.5",
 		"@types/helmet": "^0.0.43",
 		"@types/morgan": "^1.7.36",
@@ -24,6 +25,7 @@
 		"dev": "yarn types && cd src && nodemon --exec ts-node index.ts -e ts,graphql"
 	},
 	"dependencies": {
+		"bcrypt": "^3.0.6",
 		"class-validator": "^0.10.0",
 		"cors": "^2.8.5",
 		"dotenv": "^8.1.0",
