@@ -24,6 +24,7 @@
 		"dev": "yarn types && cd src && nodemon --exec ts-node index.ts -e ts,graphql"
 	},
 	"dependencies": {
+		"class-validator": "^0.10.0",
 		"cors": "^2.8.5",
 		"dotenv": "^8.1.0",
 		"graphql-tools": "^4.0.5",
