@@ -1,4 +1,3 @@
-import { createPublicKey } from "crypto";
 import { verificationTarget } from "src/types/types";
 import {
 	BaseEntity,
