@@ -1,5 +1,6 @@
 # Verification: '확인'과정, 보통 Validation(검증)과 혼동되기도
 # 하지만 'Verification(확인)'은 내부적으로 확인 'Validation(검증)'은 외부에서 확인받는 것이라고 보면 된다.
+
 type Verification {
 	id: Int!
 	target: String!
