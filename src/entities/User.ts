@@ -8,9 +8,14 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	ManyToOne,
+	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
+// User는 Chat, Message 와 상호관계를 설정해야 한다.
+import Chat from "./Chat";
+import Message from "./Message";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 
@@ -69,7 +74,16 @@ class User extends BaseEntity {
 	@Column({ type: "double precision", default: 0 })
 	lastOrientation: number;
 
+	// 수많은 User는 하나의 Chat에 있다.
+	@ManyToOne(type => Chat, chat => chat.participants)
+	chat: Chat;
+
+	// 한명의 User는 다수의 메세지를 보낼 수 있다.
+	@OneToMany(type => Message, message => message.user)
+	messages: Message[]; // 다수에는 '[]' 배열이 붙은 것에 유념
+
 	@CreateDateColumn() createdAt: string;
+
 	@UpdateDateColumn() updatedAt: string;
 
 	// 만약 무엇인가를 저장하거나 업데이트를 한다면 미리 사전처리 할 것들, 예를들어 암호화된 비밀번호를 얻어온다.
