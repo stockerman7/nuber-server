@@ -16,6 +16,8 @@ import {
 // User는 Chat, Message 와 상호관계를 설정해야 한다.
 import Chat from "./Chat";
 import Message from "./Message";
+import Ride from "./Ride";
+import Verification from "./Verification";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 
@@ -82,11 +84,22 @@ class User extends BaseEntity {
 	@OneToMany(type => Message, message => message.user)
 	messages: Message[]; // 다수에는 '[]' 배열이 붙은 것에 유념
 
+	@OneToMany(type => Verification, verification => verification.user)
+	verifications: Verification[];
+
+	// User는 승객(passenger), 운전자(driver) 둘로 구분할 수 있다.
+	// 타는 것은 운전자나 승객 둘다 다수에 포함된다.
+	@OneToMany(type => Ride, ride => ride.passenger)
+	ridesAsPassenger: Ride[];
+
+	@OneToMany(type => Ride, ride => ride.driver)
+	ridesAsDriver: Ride[];
+
 	@CreateDateColumn() createdAt: string;
 
 	@UpdateDateColumn() updatedAt: string;
 
-	// 만약 무엇인가를 저장하거나 업데이트를 한다면 미리 사전처리 할 것들, 예를들어 암호화된 비밀번호를 얻어온다.
+	// 미리 사전처리 할 것들(만약 무엇인가를 저장하거나 업데이트를 한다면, 예를들어 암호화된 비밀번호를 얻어오는 것 처럼)
 	@BeforeInsert()
 	@BeforeUpdate()
 	async savePassword(): Promise<void> {

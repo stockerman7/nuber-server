@@ -3,11 +3,13 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	ManyToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
 
 import { rideStatus } from "../types/types";
+import User from "./User";
 
 @Entity()
 class Ride extends BaseEntity {
@@ -45,6 +47,13 @@ class Ride extends BaseEntity {
 
 	@Column({ type: "text" })
 	duration: string;
+
+	// Ride 하는 것은 다수의 User(passenger, driver) 이다.
+	@ManyToOne(type => User, user => user.ridesAsPassenger)
+	passenger: User;
+
+	@ManyToOne(type => User, user => user.ridesAsDriver)
+	driver: User;
 
 	@CreateDateColumn() createdAt: string;
 

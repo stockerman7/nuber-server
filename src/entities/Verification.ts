@@ -5,9 +5,11 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
+	ManyToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
+import User from "./User";
 
 const PHONE = "PHONE";
 const EMAIL = "EMAIL";
@@ -28,7 +30,12 @@ class Verification extends BaseEntity {
 	@Column({ type: "boolean", default: false })
 	used: boolean;
 
-	@CreateDateColumn() createdAt: string;
+	// 한명의 User는 수많은 확인 절차를 받을 수 있다.
+	@ManyToOne(type => User, user => user.verifications)
+	user: User;
+
+	@CreateDateColumn()
+	createdAt: string;
 	@UpdateDateColumn() updatedAt: string;
 
 	@BeforeInsert() // 테스트로 전화번호, 이메일을 생성.

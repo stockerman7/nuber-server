@@ -3,6 +3,7 @@
 
 type Verification {
 	id: Int!
+	user: User!
 	target: String!
 	payload: String! # payload: 데이터 전달시 헤더와 메타데이터와 같은 데이터는 제외하고 근본적인 목적이 되는 데이터 부분을 말함
 	key: String!
