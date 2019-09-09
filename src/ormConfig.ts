@@ -1,5 +1,4 @@
-// ORM: ORM 프레임워크(Object-relational mapping) ORM은 데이터베이스와 객체 지향 프로그래밍 언어간의 호환되지 않는 데이터를 변환하는 프로그래밍 기법
-// typeorm 이란? TypeScript 및 JavaScript (ES5, ES6, ES7, ES8)와 함께 사용할 수있는 ORM (https://github.com/typeorm/typeorm)
+// 여기서는 entities 파일에서 설정된 typescript schema 들을 데이터베이스와 연결한다.
 import { ConnectionOptions } from "typeorm";
 
 // 데이터베이스와 연결을 위한 옵션 설정

@@ -34,8 +34,8 @@ class Verification extends BaseEntity {
 	@ManyToOne(type => User, user => user.verifications)
 	user: User;
 
-	@CreateDateColumn()
-	createdAt: string;
+	@CreateDateColumn() createdAt: string;
+
 	@UpdateDateColumn() updatedAt: string;
 
 	@BeforeInsert() // 테스트로 전화번호, 이메일을 생성.

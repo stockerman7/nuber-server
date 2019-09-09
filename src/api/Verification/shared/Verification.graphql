@@ -9,5 +9,5 @@ type Verification {
 	key: String!
 	used: Boolean!
 	createAt: String!
-	updateAt: String!
+	updateAt: String
 }
