@@ -30,8 +30,17 @@ const resolvers: Resolvers = {
 					token: null,
 				};
 			}
+			// 새로운 사용자
 			try {
-				//
+				await User.create({
+					...args,
+					profilePhoto: `http://graph.facebook.com/${fbID}/picture?type=square`,
+				}).save();
+				return {
+					ok: true,
+					error: null,
+					token: "Coming Soon",
+				};
 			} catch (error) {
 				return {
 					ok: false,

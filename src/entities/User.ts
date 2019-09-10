@@ -31,7 +31,7 @@ class User extends BaseEntity {
 
 	@Column({ type: "text", unique: true }) // unique: 유일한 값을 가지는
 	@IsEmail()
-	email: string;
+	email: string | null;
 
 	@Column({ type: "boolean", default: false })
 	verifiedEmail: boolean;

@@ -205,7 +205,7 @@ export default User;
 
 `User.graphql` 구성
 
-```gql
+```graphql
 type User {
 	id: Int!
 	email: String
@@ -240,28 +240,28 @@ type Query {
 @Entity()
 class User extends BaseEntity {
 ...
-  get fullName(): string {
-  return `${this.firstName} ${this.lastName}`;
-  }
+	get fullName(): string {
+	return `${this.firstName} ${this.lastName}`;
+	}
 
-  @Column({ type: "boolean", default: false })
-  isDriving: boolean;
+	@Column({ type: "boolean", default: false })
+	isDriving: boolean;
 
-  @Column({ type: "boolean", default: false })
-  isRiding: boolean;
+	@Column({ type: "boolean", default: false })
+	isRiding: boolean;
 
-  @Column({ type: "boolean", default: false })
-  isTaken: boolean;
+	@Column({ type: "boolean", default: false })
+	isTaken: boolean;
 
-  // double precision -> PostgresQL 에서 지원하는 float 대체 타입
-  @Column({ type: "double precision", default: 0 })
-  lastLng: number;
+	// double precision -> PostgresQL 에서 지원하는 float 대체 타입
+	@Column({ type: "double precision", default: 0 })
+	lastLng: number;
 
-  @Column({ type: "double precision", default: 0 })
-  lastLat: number;
+	@Column({ type: "double precision", default: 0 })
+	lastLat: number;
 
-  @Column({ type: "double precision", default: 0 })
-  lastOrientation: number;
+	@Column({ type: "double precision", default: 0 })
+	lastOrientation: number;
 ...
 }
 ```
@@ -289,14 +289,14 @@ $ yarn add @types/bcrypt --dev
 import bcrypt from "bcrypt"; // password 암호화(encryption)에 사용
 import { IsEmail } from "class-validator";
 import {
-  BaseEntity,
-  BeforeInsert,
-  BeforeUpdate,
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn
+	BaseEntity,
+	BeforeInsert,
+	BeforeUpdate,
+	Column,
+	CreateDateColumn,
+	Entity,
+	PrimaryGeneratedColumn,
+	UpdateDateColumn
 } from "typeorm";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
@@ -307,18 +307,18 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
   @BeforeUpdate()
   async savePassword(): Promise<void> {
   if (this.password) {
-  	// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
-  	const hasedPassword = await this.hashPassword(this.password);
-  	this.password = hasedPassword; // 암호화된 password 저장
+		// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
+		const hasedPassword = await this.hashPassword(this.password);
+		this.password = hasedPassword; // 암호화된 password 저장
   }
   }
   // 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
   public comparePassword(password: string): Promise<boolean> {
-  return bcrypt.compare(password, this.password);
+		return bcrypt.compare(password, this.password);
   }
   // password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
   private hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, BCRYPT_ROUND);
+		return bcrypt.hash(password, BCRYPT_ROUND);
   }
 ...
 ```
@@ -484,7 +484,7 @@ import User from "./User";
 class Chat extends BaseEntity {
 	@PrimaryGeneratedColumn() id: number;
 
-  // param1: 대상(target) 타입, param2: 메세지 객체
+	// param1: 대상(target) 타입, param2: 메세지 객체
 	// Chat은 다수의 메세지를 가진다. 관계가 있는 쪽에선 chat.messages 를 이용한다.
 	@OneToMany(type => Message, message => message.chat)
 	messages: Message[];
