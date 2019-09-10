@@ -31,7 +31,7 @@ $ yarn add graphql-to-typescript gql-merge --dev
 ```
 - `dev` : `nodemon --exec ts-node index.ts` 는 Hot Loading 이다. (우선 전제 nodemon, ts-node 설치) `ts-node` 는 `index.ts` 를 실행(`.ts` 를 `.js` 로 변환)한다. 그리고 `nodemon` 이 다른 확장자 `ts, graphql` 을 감시하도록 `-e` 옵션을 준다.
 - `pretypes` : Typescript 하기전 선처리를 말한다. 먼저 모든 `.graphql` 파일들을 합친다. 첫번째 매개변수는 output 으로 생성할 파일 경로이고 두번째는 소스 파일 경로다.
-- `types` : `pretypes` 에서 생성된 `schema.graphql` 파일로 Typescript 로 변환한다. 두번째 매개변수가 output 파일 경로다. `.d.ts` 파일은 Typescript가 타입이 정의된 파일이라고 인식하게 해준다. 그리고 VSC(Visual Studio Code)에서 자동으로 `import` 하도록 도와준다. (`tsconfig.json` 에서 `"rootDir"` 설정이 `"src"` 경로로 설정된 경우 그 파일안에 모든 `.d.ts` 를 찾을 것이다. )
+- `types` : `pretypes` 에서 생성된 `schema.graphql` 파일로 Typescript 로 변환한다. 두번째 매개변수가 output 파일 경로다. `.d.ts` 파일은 Typescript가 타입이 정의된 파일이라고 인식하게 해준다. 그리고 VSC(Visual Studio Code)에서 자동으로 `import` 하도록 도와준다. (`tsconfig.json` 에서 `"rootDir"` 설정이 `"src"` 경로로 설정된 경우 그 디렉토리 안에 모든 `.d.ts` 를 찾을 것이다.)
 
 작동 순서는 `predev`, `pretypes`, `types`, `dev` 이다.
 
@@ -39,7 +39,7 @@ $ yarn add graphql-to-typescript gql-merge --dev
 
 ----
 
-## #1.10 TypeORM 설정하기
+## #1.10 TypeORM 설정
 이제 ORM 을 이용해 데이터베이스와 연결한다. 그중에서도 TypeORM 을 사용할 것이다. TypeORM 은 TypeScript 및 JavaScript (ES5, ES6, ES7, ES8)와 함께 사용할 수 있는 ORM 이다.
 https://github.com/typeorm/typeorm
 
@@ -132,7 +132,7 @@ dotenv.config();
 ...
 ```
 
-`dotenv.cofing()` 호출로 `.env` 을 찾아 적용한다. 꼭 `connectionOption` 이전에 불러오고 호출해야만 한다. 그렇게 하는 이유는 환경변수가 적용되지 않은 상태에서 ORM 이 실행되면 안되기 때문이다. 다시말해 환경변수`.env` 설정이 되어야 `ormConfig.ts` 파일의 `connectionOption` 옵션들이 제대로 적용된다.
+`dotenv.cofing()` 호출로 `.env` 을 찾아 적용한다. 꼭 `connectionOption` 이전에 불러오고 호출해야만 한다. 그렇게 하는 이유는 환경변수가 적용되지 않은 상태에서 ORM 이 실행되면 안되기 때문이다. 다시말해 환경변수`.env` 설정이 되어야 `ormConfig.ts` 파일의 `connectionOption` 옵션들이 제대로 적용된다.
 
 그리고 Git 에 Push 하기 전에 `.gitignore` 파일에 `.env` 을 추가한다. 환경변수는 노출되면 보안에 치명적이기 때문이다.
 
@@ -174,25 +174,25 @@ class User extends BaseEntity {
   verifiedEmail: boolean;
   
   @Column({ type: "text" })
-	firstName: string;
+  firstName: string;
 
-	@Column({ type: "text" })
-	lastName: string;
+  @Column({ type: "text" })
+  lastName: string;
 
-	@Column({ type: "int" })
-	age: number;
+  @Column({ type: "int" })
+  age: number;
 
-	@Column({ type: "text" })
-	password: string;
+  @Column({ type: "text" })
+  password: string;
 
-	@Column({ type: "text" })
-	phoneNumber: string;
+  @Column({ type: "text" })
+  phoneNumber: string;
 
-	@Column({ type: "boolean", default: false })
-	verifiedPhoneNumber: boolean;
+  @Column({ type: "boolean", default: false })
+  verifiedPhoneNumber: boolean;
 
-	@Column({ type: "text" })
-	profilePhoto: string;
+  @Column({ type: "text" })
+  profilePhoto: string;
 
   @CreateDateColumn() createdAt: string;
   @UpdateDateColumn() updatedAt: string;
@@ -290,11 +290,11 @@ import bcrypt from "bcrypt"; // password 암호화(encryption)에 사용
 import { IsEmail } from "class-validator";
 import {
   BaseEntity,
-	BeforeInsert,
-	BeforeUpdate,
-	Column,
-	CreateDateColumn,
-	Entity,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn
 } from "typeorm";
@@ -304,21 +304,21 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
   ...
 
   @BeforeInsert()
-	@BeforeUpdate()
-	async savePassword(): Promise<void> {
-		if (this.password) {
-			// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
-			const hasedPassword = await this.hashPassword(this.password);
-			this.password = hasedPassword; // 암호화된 password 저장
-		}
-	}
-	// 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
-	public comparePassword(password: string): Promise<boolean> {
-		return bcrypt.compare(password, this.password);
-	}
-	// password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
-	private hashPassword(password: string): Promise<string> {
-		return bcrypt.hash(password, BCRYPT_ROUND);
+  @BeforeUpdate()
+  async savePassword(): Promise<void> {
+  if (this.password) {
+  	// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
+  	const hasedPassword = await this.hashPassword(this.password);
+  	this.password = hasedPassword; // 암호화된 password 저장
+  }
+  }
+  // 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
+  public comparePassword(password: string): Promise<boolean> {
+  return bcrypt.compare(password, this.password);
+  }
+  // password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
+  private hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUND);
   }
 ...
 ```
@@ -557,7 +557,7 @@ chat: Chat[];
 
 
 ----
-## #1.25 까지 파일 구성 요약
+## #1.25 까지 파일 구성
 
 ```
 src
@@ -634,9 +634,13 @@ src
 
 > NOTE:
 > 
-> **JSON Web Token (JWT)**
-> 
+> **JSON Web Token (JWT)** <br>
 > 웹표준 (RFC7519) 으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인 (self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 'Public Key/Private Key' 쌍으로 서명할 수 있다.
+>
+> **Token?** <br>
+> 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
+> https://velopert.com/2350 <br>
+> https://tansfil.tistory.com/58
 
 ## Code Challenge
 - [ ] 탑승 기록 조회
