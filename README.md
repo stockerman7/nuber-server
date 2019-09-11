@@ -207,25 +207,25 @@ export default User;
 
 ```graphql
 type User {
-	id: Int!
-	email: String
-	verifiedEmail: String!
-	firstName: String!
-	lastName: String!
-	age: Int
-	password: String
-	phoneNumber: String
-	verifiedPhoneNumber: Boolean!
-	profilePhoto: String
-	fullName: String
-	isDriving: Boolean!
-	isRiding: Boolean!
-	isTaken: Boolean!
-	lastLng: Float
-	lastLat: Float
-	lastOrientation: Float
-	createdAt: String!
-	updatedAt: String
+  id: Int!
+  email: String
+  verifiedEmail: String!
+  firstName: String!
+  lastName: String!
+  age: Int
+  password: String
+  phoneNumber: String
+  verifiedPhoneNumber: Boolean!
+  profilePhoto: String
+  fullName: String
+  isDriving: Boolean!
+  isRiding: Boolean!
+  isTaken: Boolean!
+  lastLng: Float
+  lastLat: Float
+  lastOrientation: Float
+  createdAt: String!
+  updatedAt: String
 }
 
 type Query {
@@ -289,14 +289,14 @@ $ yarn add @types/bcrypt --dev
 import bcrypt from "bcrypt"; // password 암호화(encryption)에 사용
 import { IsEmail } from "class-validator";
 import {
-	BaseEntity,
-	BeforeInsert,
-	BeforeUpdate,
-	Column,
-	CreateDateColumn,
-	Entity,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn
+  BaseEntity,
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn
 } from "typeorm";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
@@ -350,14 +350,14 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 
 ```gql
 type Verification {
-	id: Int!
-	user: User!
-	target: String!
-	payload: String!
-	key: String!
-	used: Boolean!
-	createAt: String!
-	updateAt: String!
+  id: Int!
+  user: User!
+  target: String!
+  payload: String!
+  key: String!
+  used: Boolean!
+  createAt: String!
+  updateAt: String!
 }
 ```
 
@@ -368,14 +368,14 @@ type Verification {
 ```typescript
 import { verificationTarget } from "src/types/types";
 import {
-	BaseEntity,
-	BeforeInsert,
-	Column,
-	CreateDateColumn,
-	Entity,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
+  BaseEntity,
+  BeforeInsert,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import User from "./User";
 
@@ -384,34 +384,34 @@ const EMAIL = "EMAIL";
 
 @Entity()
 class Verification extends BaseEntity {
-	@PrimaryGeneratedColumn() id: number;
+  @PrimaryGeneratedColumn() id: number;
 
-	@Column({ type: "text", enum: [PHONE, EMAIL] })
-	target: verificationTarget;
+  @Column({ type: "text", enum: [PHONE, EMAIL] })
+  target: verificationTarget;
 
-	@Column({ type: "text" })
-	payload: string;
+  @Column({ type: "text" })
+  payload: string;
 
-	@Column({ type: "text" })
-	key: string;
+  @Column({ type: "text" })
+  key: string;
 
-	@Column({ type: "boolean", default: false })
-	used: boolean;
+  @Column({ type: "boolean", default: false })
+  used: boolean;
 
-	@CreateDateColumn() createdAt: string;
+  @CreateDateColumn() createdAt: string;
 
-	@UpdateDateColumn() updatedAt: string;
+  @UpdateDateColumn() updatedAt: string;
 
-	@BeforeInsert() // 테스트로 전화번호, 이메일을 생성.
-	createKey(): void {
-		if (this.target === PHONE) {
-			this.key = Math.floor(Math.random() * 100000).toString();
-		} else if (this.target === EMAIL) {
-			this.key = Math.random()
-				.toString(36) // '36' 은 숫자를 문자로 바꿔준다.
-				.substr(2);
-		}
-	}
+  @BeforeInsert() // 테스트로 전화번호, 이메일을 생성.
+  createKey(): void {
+    if (this.target === PHONE) {
+    	this.key = Math.floor(Math.random() * 100000).toString();
+    } else if (this.target === EMAIL) {
+    	this.key = Math.random()
+    		.toString(36) // '36' 은 숫자를 문자로 바꿔준다.
+    		.substr(2);
+    }
+  }
 }
 
 export default Verification;
