@@ -604,7 +604,7 @@ src
 ## Resolver
 
 ### Public Resolver
-- [ ] 로그인 / Facebook(SNS) 가입
+- [x] 로그인 / Facebook(SNS) 가입
 - [ ] 이메일 가입
 - [ ] 이메일 로그인
 - [ ] 핸드폰 번호 인증 시작
@@ -612,6 +612,8 @@ src
 ----------
 
 ### Private Resolver (JWT)
+- [ ] JWT 생성
+- [ ] JWT 인증
 - [ ] 이메일 인증
 - [ ] 프로파일 조회
 - [ ] 프로파일 변경

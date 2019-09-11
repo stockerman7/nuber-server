@@ -20,7 +20,7 @@ const resolvers: Resolvers = {
 					return {
 						ok: true,
 						error: null,
-						token: "Coming Soon",
+						token: "이미 존재합니다.",
 					};
 				}
 			} catch (error) {
@@ -30,8 +30,9 @@ const resolvers: Resolvers = {
 					token: null,
 				};
 			}
-			// 새로운 사용자
+			// 새로운 사용자, try/catch 구문은 에러를 캐치하고 보기쉽게 메세지를 전달한다.
 			try {
+				// 새로운 사용자를 생성하고 데이터베이스 저장/업데이트
 				await User.create({
 					...args,
 					profilePhoto: `http://graph.facebook.com/${fbID}/picture?type=square`,
@@ -39,7 +40,7 @@ const resolvers: Resolvers = {
 				return {
 					ok: true,
 					error: null,
-					token: "Coming Soon",
+					token: "새로운 사용자 생성완료",
 				};
 			} catch (error) {
 				return {
