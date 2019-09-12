@@ -87,8 +87,8 @@ class User extends BaseEntity {
 	@OneToMany(type => Message, message => message.user)
 	messages: Message[]; // 다수에는 '[]' 배열이 붙은 것에 유념
 
-	@OneToMany(type => Verification, verification => verification.user)
-	verifications: Verification[];
+	// @OneToMany(type => Verification, verification => verification.user)
+	// verifications: Verification[];
 
 	// User는 승객(passenger), 운전자(driver) 둘로 구분할 수 있다.
 	// 타는 것은 운전자나 승객 둘다 다수에 포함된다.

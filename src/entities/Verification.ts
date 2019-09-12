@@ -30,9 +30,10 @@ class Verification extends BaseEntity {
 	@Column({ type: "boolean", default: false })
 	used: boolean;
 
-	// 한명의 User는 수많은 확인 절차를 받을 수 있다.
-	@ManyToOne(type => User, user => user.verifications)
-	user: User;
+	// 한명의 User는 받았던 수많은 인증을 알 수 있다. nullable 은 user 없이도 인증을 생성할 수 있다는 뜻이다.
+	// 즉 이메일 인증이 필요할 시에만 User 를 가지도록 한다. 휴대폰 인증은 StartPhoneVerification 에서 한다.
+	// @ManyToOne(type => User, user => user.verifications, { nullable: true })
+	// user: User;
 
 	@CreateDateColumn() createdAt: string;
 

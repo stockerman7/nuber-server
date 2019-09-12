@@ -56,15 +56,15 @@ $ yarn add typeorm
 import { ConnectionOptions } from "typeorm";
 
 const connectionOptions: ConnectionOptions = {
-	type: "postgres", // 어떤 데이터베이스 환경인지
-	database: "nuber", // 데이터베이스 이름
-	synchronize: true,
-	logging: true,
-	entities: ["entities/*.*"], // 핵심 모델이 있는 경로
-	host: process.env.DB_ENDPOINT, // 서버 host 주소
-	port: 5432, // postgres 기본 포트
-	username: process.env.DB_USERNAME,
-	password: process.env.DB_PASSWORD,
+  type: "postgres", // 어떤 데이터베이스 환경인지
+  database: "nuber", // 데이터베이스 이름
+  synchronize: true,
+  logging: true,
+  entities: ["entities/*.*"], // 핵심 모델이 있는 경로
+  host: process.env.DB_ENDPOINT, // 서버 host 주소
+  port: 5432, // postgres 기본 포트
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
 };
 
 export default connectionOptions;
@@ -87,19 +87,19 @@ const PLAYGORUND_ENDPOINT: string = "/playground";
 const GRAPHQL_ENDPOINT: string = "/graphql";
 
 const appOptions: Options = {
-	port: PORT,
-	playground: PLAYGORUND_ENDPOINT,
-	endpoint: GRAPHQL_ENDPOINT,
+  port: PORT,
+  playground: PLAYGORUND_ENDPOINT,
+  endpoint: GRAPHQL_ENDPOINT,
 };
 
 const handleAppStart = () => console.log(`Listening on port ${PORT}`);
 
 // 3. DB서버 접속 후 앱 연동 설정, catch 로 에러를 잡는다.
 createConnection(connectionOptions)
-	.then(() => {
-		app.start(appOptions, handleAppStart);
-	})
-	.catch(error => console.log(error));
+  .then(() => {
+    app.start(appOptions, handleAppStart);
+  })
+  .catch(error => console.log(error));
 ```
 
 이처럼 TypeORM Entity 은 자동으로 데이터베이스와 연동이 되도록 도와준다. 그러나 GraphQL 에서 바로 자동으로 TypeORM Entity 으로 변경해주는 기능은 아직 존재하지 않는다. 그래서 다음 작업에서는 TypeORM Entity 를 직접 작성해야 한다.
@@ -240,28 +240,28 @@ type Query {
 @Entity()
 class User extends BaseEntity {
 ...
-	get fullName(): string {
-	return `${this.firstName} ${this.lastName}`;
-	}
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
 
-	@Column({ type: "boolean", default: false })
-	isDriving: boolean;
+  @Column({ type: "boolean", default: false })
+  isDriving: boolean;
 
-	@Column({ type: "boolean", default: false })
-	isRiding: boolean;
+  @Column({ type: "boolean", default: false })
+  isRiding: boolean;
 
-	@Column({ type: "boolean", default: false })
-	isTaken: boolean;
+  @Column({ type: "boolean", default: false })
+  isTaken: boolean;
 
-	// double precision -> PostgresQL 에서 지원하는 float 대체 타입
-	@Column({ type: "double precision", default: 0 })
-	lastLng: number;
+  // double precision -> PostgresQL 에서 지원하는 float 대체 타입
+  @Column({ type: "double precision", default: 0 })
+  lastLng: number;
 
-	@Column({ type: "double precision", default: 0 })
-	lastLat: number;
+  @Column({ type: "double precision", default: 0 })
+  lastLat: number;
 
-	@Column({ type: "double precision", default: 0 })
-	lastOrientation: number;
+  @Column({ type: "double precision", default: 0 })
+  lastOrientation: number;
 ...
 }
 ```
@@ -306,19 +306,19 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
   @BeforeInsert()
   @BeforeUpdate()
   async savePassword(): Promise<void> {
-  if (this.password) {
-		// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
-		const hasedPassword = await this.hashPassword(this.password);
-		this.password = hasedPassword; // 암호화된 password 저장
-  }
+    if (this.password) {
+      // awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
+      const hasedPassword = await this.hashPassword(this.password);
+      this.password = hasedPassword; // 암호화된 password 저장
+    }
   }
   // 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
   public comparePassword(password: string): Promise<boolean> {
-		return bcrypt.compare(password, this.password);
+    return bcrypt.compare(password, this.password);
   }
   // password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
   private hashPassword(password: string): Promise<string> {
-		return bcrypt.hash(password, BCRYPT_ROUND);
+    return bcrypt.hash(password, BCRYPT_ROUND);
   }
 ...
 ```
@@ -441,11 +441,11 @@ api 디렉토리 안에는 <br>
 #### Chat.graphql
 ```graphql
 type Chat {
-	id: Int!
-	messages: [Message]
-	participants: [User]
-	createdAt: String!
-	updatedAt: String
+  id: Int!
+  messages: [Message]
+  participants: [User]
+  createdAt: String!
+  updatedAt: String
 }
 ```
 Chat 에서 관계 설정에 눈여겨 봐야할 부분은 `messages: [Message]`, `participants: [User]` 이다.
@@ -453,12 +453,12 @@ Chat 에서 관계 설정에 눈여겨 봐야할 부분은 `messages: [Message]`
 #### Message.graphql
 ```graphql
 type Message {
-	id: Int!
-	text: String!
-	chat: Chat!
-	user: User!
-	createdAt: String!
-	updatedAt: String
+  id: Int!
+  text: String!
+  chat: Chat!
+  user: User!
+  createdAt: String!
+  updatedAt: String
 }
 ```
 Message 에서 관계 설정에 눈여겨 봐야할 부분은 `chat: Chat!`, `user: User!` 이다.
@@ -470,31 +470,31 @@ entities 디렉토리 안에는 <br>
 #### Chat.ts
 ```typescript
 import {
-	BaseEntity,
-	CreateDateColumn,
-	Entity,
-	OneToMany,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
+  BaseEntity,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import Message from "./Message";
 import User from "./User";
 
 @Entity()
 class Chat extends BaseEntity {
-	@PrimaryGeneratedColumn() id: number;
+  @PrimaryGeneratedColumn() id: number;
 
-	// param1: 대상(target) 타입, param2: 메세지 객체
-	// Chat은 다수의 메세지를 가진다. 관계가 있는 쪽에선 chat.messages 를 이용한다.
-	@OneToMany(type => Message, message => message.chat)
-	messages: Message[];
-	// Chat은 다수의 User를 가진다. 관계가 있는 쪽에선 chat.participants 를 이용한다
-	@OneToMany(type => User, user => user.chat)
-	participants: User[];
+  // param1: 대상(target) 타입, param2: 메세지 객체
+  // Chat은 다수의 메세지를 가진다. 관계가 있는 쪽에선 chat.messages 를 이용한다.
+  @OneToMany(type => Message, message => message.chat)
+  messages: Message[];
+  // Chat은 다수의 User를 가진다. 관계가 있는 쪽에선 chat.participants 를 이용한다
+  @OneToMany(type => User, user => user.chat)
+  participants: User[];
 
-	@CreateDateColumn() createdAt: string;
+  @CreateDateColumn() createdAt: string;
 
-	@UpdateDateColumn() updatedAt: string;
+  @UpdateDateColumn() updatedAt: string;
 }
 
 export default Chat;
@@ -509,35 +509,35 @@ Chat Entity 의 관계 설정을 보도록 하자. 우선 첫번째 `@OneToMany`
 #### Message.ts
 ```typescript
 import {
-	BaseEntity,
-	Column,
-	CreateDateColumn,
-	Entity,
-	ManyToOne,
-	PrimaryGeneratedColumn,
-	UpdateDateColumn,
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import Chat from "./Chat";
 import User from "./User";
 
 @Entity()
 class Message extends BaseEntity {
-	@PrimaryGeneratedColumn() id: number;
+  @PrimaryGeneratedColumn() id: number;
 
-	@Column({ type: "text" })
-	text: string;
+  @Column({ type: "text" })
+  text: string;
 
-	// Message 는 하나의 Chat 가진다. 관계가 있는 쪽에선 message.chat 을 이용한다
-	@ManyToOne(type => Chat, chat => chat.messages)
-	chat: Chat;
+  // Message 는 하나의 Chat 가진다. 관계가 있는 쪽에선 message.chat 을 이용한다
+  @ManyToOne(type => Chat, chat => chat.messages)
+  chat: Chat;
 
-	// Message 는 하나의 User 가진다. 관계가 있는 쪽에선 message.user 를 이용한다
-	@ManyToOne(type => User, user => user.messages)
-	user: User;
+  // Message 는 하나의 User 가진다. 관계가 있는 쪽에선 message.user 를 이용한다
+  @ManyToOne(type => User, user => user.messages)
+  user: User;
 
-	@CreateDateColumn() createdAt: string;
+  @CreateDateColumn() createdAt: string;
 
-	@UpdateDateColumn() updatedAt: string;
+  @UpdateDateColumn() updatedAt: string;
 }
 
 export default Message;
@@ -606,7 +606,7 @@ src
 ### Public Resolver
 - [x] 로그인 / Facebook(SNS) 가입
 - [ ] 이메일 가입
-- [ ] 이메일 로그인
+- [x] 이메일 로그인
 - [ ] 핸드폰 번호 인증 시작
 - [ ] 핸드폰 번호 인증 완료
 ----------
@@ -647,3 +647,16 @@ src
 ## Code Challenge
 - [ ] 탑승 기록 조회
 - [ ] 탑승 상세 보기
+
+----
+
+## #1.35 StartPhoneVerification Resolver
+
+```bash
+$ yarn add twilio
+```
+
+```bash
+$ yarn add @types/twilio --dev
+```
+
