@@ -101,11 +101,9 @@ type StartPhoneVerificationResponse {
 
 type Verification {
   id: Int!
-  # user: User!
   target: String!
   payload: String!
   key: String!
-  used: Boolean!
   createAt: String!
   updateAt: String
 }
