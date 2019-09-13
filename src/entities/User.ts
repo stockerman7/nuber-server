@@ -17,7 +17,7 @@ import {
 import Chat from "./Chat";
 import Message from "./Message";
 import Ride from "./Ride";
-import Verification from "./Verification";
+// import Verification from "./Verification";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 

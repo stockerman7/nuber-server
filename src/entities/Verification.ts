@@ -9,7 +9,7 @@ import {
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
-import User from "./User";
+// import User from "./User";
 
 const PHONE = "PHONE";
 const EMAIL = "EMAIL";
@@ -26,9 +26,6 @@ class Verification extends BaseEntity {
 
 	@Column({ type: "text" })
 	key: string;
-
-	@Column({ type: "boolean", default: false })
-	used: boolean;
 
 	// 한명의 User는 받았던 수많은 인증을 알 수 있다. nullable 은 user 없이도 인증을 생성할 수 있다는 뜻이다.
 	// 즉 이메일 인증이 필요할 시에만 User 를 가지도록 한다. 휴대폰 인증은 StartPhoneVerification 에서 한다.

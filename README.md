@@ -3,7 +3,7 @@
 노마드 아카데미 (N)Uber 클론 코딩 서버 파트. GraphQL, Typescript, NodeJS
 
 
-## #1.8 gql-merge && graphql-to-typescript 설정
+## #1.8 gql-merge & graphql-to-typescript 설정
 Typescript 에서는 Value, Arguments 들의 타입이 무엇인지 체크할 수 있다. 그러나 GraphQL 에서는 타입 체크라는 기능이 없다. 타입 체크가 가지는 강점을 이용하기 위해선 GraphQL 에서 정의되고 반환되는 객체나 타입이 무엇인지 Typescript가 인식하도록 해야한다. 결국 GraphQL 에서도 타입 체크를 위한 설정을 해야한다.
 
 다음 필요한 두 가지 모듈을 설치한다.
@@ -357,7 +357,7 @@ type Verification {
   key: String!
   used: Boolean!
   createAt: String!
-  updateAt: String!
+  updateAt: String
 }
 ```
 
@@ -638,11 +638,31 @@ src
 > 
 > **JSON Web Token (JWT)** <br>
 > 웹표준 (RFC7519) 으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인 (self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 'Public Key/Private Key' 쌍으로 서명할 수 있다.
+> 
+> ![JWT Example](https://lh3.googleusercontent.com/R0KtR5ln_XeT9F0GXu0LZ4nzLdckjzbcezEqYLl62cv1_M3dn1fK0ElaU_-pwHAAfosepT5QDUMFPwN57HxEbPHPcMTdRVTIaVjddDkeKfUofDCFbvEVH-i2_Ijz9gPbMkOVIrJ9BQ=w640)
+>
+>
+> 토큰을 만들기 위해서는 3가지, Header,Payload, Verify Signature 가 필요하다. 
+> - Header : 위 3가지 정보를 암호화할 방식(alg: 알고리즘), 타입(type) 등.
+> - Payload : 서버에서 보낼 data. 일반적으로 유저의 고유 ID값, 유효기간이 들어간다.
+> - Verify Signature : Base64 방식으로 인코딩한 Header, payload 그리고 SECRET KEY를 더한 후 서명된다. 이것을 알지 못하면 암호화된 것을 복호화 할 수 없다.
 >
 > **Token?** <br>
 > 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
+>
+> **JWT 진행과정** <br>
+> ![JWT Progress](https://lh3.googleusercontent.com/KW_oaGRbItkUjH6eAeO5I7H42WYmrVnODxoyWg8eC7BAz-nl6LCNjK9a87gXwiif1jo6te3d7LCPI4U3ROwJaIBKkQVY2taaoaqc71c1A1ekVOmhMcToYLKv5_vcf4RLCwcNi2xbuA=w640)
+> 1. 사용자 로그인
+> 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 Payload에 넣는다.
+> 3. JWT 토큰의 유효기간을 설정
+> 4. 암호화할 SECRET KEY를 이용해 ACCESS TOKEN을 발급
+> 5. 사용자는 Access Token을 받아 저장 후, 인증이 필요한 요청마다 토큰을 헤더에 실어 보낸다.
+> 6. 서버에서는 해당 토큰의 Verify Signature를 SECRET KEY로 복호화한 후, 조작 여부, 유효기간을 확인
+> 7. 검증이 완료된다면, Payload를 디코딩하여 사용자의 ID에 맞는 데이터를 찾고 요청 데이터를 보낸다.
+>
 > https://velopert.com/2350 <br>
 > https://tansfil.tistory.com/58
+
 
 ## Code Challenge
 - [ ] 탑승 기록 조회
@@ -650,7 +670,7 @@ src
 
 ----
 
-## #1.35 StartPhoneVerification Resolver
+## #1.35 휴대폰 SMS 인증(StartPhoneVerification) Resolver
 
 ```bash
 $ yarn add twilio
