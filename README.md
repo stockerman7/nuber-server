@@ -72,7 +72,7 @@ export default connectionOptions;
 
 연결 옵션을 설정하고 특히 `entities` 는 데이터베이스와 연결하기 위헤 모든 모델 파일이 있는 Typescript Schema 들을 가져온다. `*.*` 는 확장자가 `.ts`, `.js` 가 될 수도 있다는 뜻이다.
 
-> NOTE: Entity 는 컴퓨터 세계에서 정보/의미의 최소 단위를 말한다.
+> NOTE: Entity(개체) 는 컴퓨터 세계에서 정보/의미의 최소 단위를 말한다. 흔히 Object(객체)와 혼동하기 쉬운데 객체는 사물이 가지는 속성 단위를 말한다. 즉 정보 단위냐 속성 단위냐의 차이점이 있다.
 
 그리고 TypeORM 이 적용된 데이터베이스 접속을 우선적으로 하고 앱을 실행해야 한다. `index.ts` 안에 다음과 같이 추가/변경 한다.
 
@@ -301,7 +301,9 @@ import {
 } from "typeorm";
 
 const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
-  ...
+
+@Entity()
+class User extends BaseEntity {
   ...
 
   @BeforeInsert()
@@ -321,7 +323,7 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
   private hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, BCRYPT_ROUND);
   }
-...
+}
 ```
 
 - `@BeforeInsert`, `@BeforeUpdate` 를 추가한 이유는 객체를 업데이트 하기전에 이루어지는 메소드가 필요하기 때문이다. 만약 무엇인가를 저장하거나 업데이트를 하기에 앞서 비밀번호(Password)를 암호화(Encryption) 해야한다.
@@ -607,7 +609,7 @@ src
 - [x] 핸드폰 번호 인증 완료
 
 ### Authentication
-- [ ] JWT 생성
+- [x] JWT 생성
 - [ ] JWT 인증
 
 ### Private Resolver
@@ -631,37 +633,6 @@ src
 - [ ] 채팅방 메세지 승인
 - [ ] 채팅 메세지 전달
 
-> NOTE:
-> 
-> **JSON Web Token (JWT)** <br>
-> 웹표준(RFC7519)으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인(self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 `Public Key/Private Key` 쌍으로 서명할 수 있다. 여기서 `Private Key` 나 `SECRET KEY` 는 같은 개념이다.
-> 
-> **Token?** <br>
-> 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
-> 
-> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
-> https://jwt.io/
->
-> 토큰을 만들기 위해서는 `Header`, `Payload`, `Verify Signature` 이렇게 3가지가 필요하다. 
-> - `Header` : 위 3가지 정보를 암호화할 방식(alg: 알고리즘), 타입(type) 등.
-> - `Payload` : 서버에서 보낼 '실제 데이터'. 일반적으로 사용자의 고유 ID값, 유효기간이 들어간다.
-> - `Verify Signature` : Base64 방식으로 인코딩한 `Header`, `Payload` 그리고 `SECRET KEY`를 더한 후 서명한다. `Public Key` 는 누구에게든 '배포' 할 수 있다. 그러나 '복호화'하는 것은 `Private Key(SECRET KEY)` 가 있어야만 가능하다. '공인 인증서' 발급/인증 과정과 같다.
->
-> **JWT 진행과정** <br>
-> ![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w720)
-> 
-> 1. 사용자 로그인
-> 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 `Payload`에 넣는다.
-> 3. JWT 토큰의 유효기간을 설정
-> 4. 암호화할 `SECRET KEY`를 이용해 Access Token을 발급
-> 5. 사용자는 Access Token을 받아 저장 후, 인증이 필요한 요청마다 토큰을 헤더에 실어 보낸다.
-> 6. 서버에서는 해당 토큰의 `Verify Signature`를 `SECRET KEY`로 복호화한 후, 조작 여부, 유효기간을 확인
-> 7. 검증이 완료된다면, `Payload`를 디코딩하여 사용자의 ID에 맞는 요청 데이터를 찾고 다시 보낸다.
->
-> https://velopert.com/2350 <br>
-> https://tansfil.tistory.com/58
-
-
 ## Code Challenge
 - [ ] 탑승 기록 조회
 - [ ] 탑승 상세 보기
@@ -681,3 +652,67 @@ Twilio 타입체크를 위한 모듈 설치
 $ yarn add @types/twilio --dev
 ```
 
+## #1.41 사용자 JWT 생성
+이제 사용자를 인증하는 방식인 JWT(JSON Web Token)을 다룰 것이다. 우선 다음 모듈을 설치한다.
+
+```bash
+$ yarn add jsonwebtoken
+```
+
+타입체크를 위한 모듈 설치
+```bash
+$ yarn add @types/jsonwebtoken --dev
+```
+
+그리고 다음은 `src/utils/createJWT.ts` 을 만든다.
+
+> NOTE:
+> 
+> **JWT (JSON Web Token)** <br>
+> 웹표준(RFC7519)으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인(self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 `Public Key/Private Key` 쌍으로 서명할 수 있다. 여기서 `Private Key` 나 `SECRET KEY` 는 같은 개념이다.
+> 
+> **Token?** <br>
+> 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
+> 
+> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
+> https://jwt.io/
+>
+> 토큰을 만들기 위해서는 `Header`, `Payload`, `Verify Signature` 이렇게 3가지가 필요하다. 
+> - `Header` : 위 3가지 정보를 암호화할 방식(alg: 알고리즘), 타입(type) 등.
+> - `Payload` : 서버에서 보낼 '실제 데이터'. 일반적으로 사용자의 고유 ID값, 유효기간이 들어간다.
+> - `Verify Signature` : Base64 방식으로 인코딩한 `Header`, `Payload` 그리고 `SECRET KEY`를 더한 후 서명한다. `Public Key` 는 누구에게든 '배포' 할 수 있다. 그러나 '복호화'하는 것은 `Private Key(SECRET KEY)` 가 있어야만 가능하다. '공인 인증서' 발급/인증 과정과 같다.
+>
+
+우선 JWT 가 어떻게 이루어지는지 진행과정을 간략하게 다룰 필요가 있다.
+
+### JWT 진행과정 <br>
+![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w720)
+
+1. 사용자 로그인
+2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 `Payload`에 넣는다.
+3. 발급 전에 JWT 토큰의 유효기간을 설정한다.
+4. 암호화할 `SECRET KEY`를 이용해 Access Token을 발급
+5. 사용자는 Access Token을 받아 저장 후, 인증이 필요한 요청마다 토큰을 헤더에 실어 보낸다.
+6. 서버에서는 해당 토큰의 `Verify Signature`를 `SECRET KEY`로 복호화한 후, 조작 여부, 유효기간을 검증
+7. 검증이 완료되면, `Payload`를 디코딩하여 사용자의 ID에 맞는 요청 데이터를 찾고 다시 전달한다.
+
+**참고:** 
+https://velopert.com/2350, https://tansfil.tistory.com/58
+
+`createJWT.ts` 에서 구현할 과정은 사용자의 고유 ID 를 받으면 JWT 를 생성하는 일이다(이미지 3, 4번 과정).
+
+```typescript
+import jwt from "jsonwebtoken";
+
+const createJWT = (id: number): string => {
+   const token = jwt.sign({ id }, process.env.JWT_TOKEN);
+   return token;
+};
+
+export default createJWT;
+```
+
+- `jsonwebtoken` 모듈을 불러오기 하고
+- `createJWT` 함수를 생성한다. `number` 타입의 `id` 를 매개변수로 받고 반환은 `string` 타입이 될 것이다.
+- 이제 `token` 을 만드는데 우선 두개의 매개변수가 필요하다. 첫번째는 `id`, 두번째는 `Private Key(SECRET KEY)` 를 생성해주는 양식이다.
+- 두번째 매개변수는 중요하기 때문에 `.env` 환경변수에 저장해 가져오도록 한다. https://passwordsgenerator.net/ 에 접속해 `Private Key(SECRET KEY)`를 생성해주는 옵션들을 선택하고 Generate Password 버튼을 클릭, 양식을 복사한다. 복사한 양식을 `.env` 파일에 `JWT_TOKEN=` 에 붙여넣기 한다. 그리고 `process.env.JWT_TOKEN` 으로 가져온다.
