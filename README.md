@@ -232,6 +232,7 @@ type Query {
   user: User
 }
 ```
+----
 
 ## #1.14 User Entity 추가
 이제 `User.ts` 에 `profilePhoto` 이어서 `@Column` 들을 추가한다.
@@ -273,7 +274,7 @@ class User extends BaseEntity {
 ----
 
 ## #1.15 User Password 암호화
-사용자의 비밀번호는 절대 노출이 되서는 안된다. 통신을 할때도 마찬가지다. 더 추가적인 작업이 필요한데 바로 암호화(Encryption) 작업이다.
+사용자의 비밀번호는 절대 노출이 되서는 안된다. 통신을 할때도 마찬가지인데 이를 위해선 추가적인 작업이 필요하다. 바로 암호화(Encryption) 작업이다.
 
 사용자가 가입시 '1234' 라는 비밀번호를 서버에게 알려주면 서버는 원본을 우선 암호화하고 데이터베이스에 저장한다. 나중에 사용자가 다시 로그인 할 때 비밀번호를 서버에게 전달하면 서버는 로그인으로 전달된 비밀번호를 암호화 하고 데이터베이스에 있던 암호화된 비밀번호와 비교하는 방식이다.
 
@@ -344,18 +345,16 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 ----
 
 ## #1.17 Verification Entity
-여기서는 사용자 인증을 위한 확인(Verification) Entity 를 만든다. Verification 은 '확인'과정, 보통 Validation(검증)과 혼동되기도 하지만 'Verification(확인)'은 내부적으로 확인 'Validation(검증)'은 외부에서 확인받는 것이라고 보면 된다. 자주 사용되는 사용자 확인으로 Phone, Email 을 다룰 것이다.
+여기서는 사용자 인증을 위한 Verification(인증/확인) Entity 를 만든다. Verification 은 '확인'과정, 보통 Validation(검증)과 혼동되기도 하지만 'Verification(인증/확인)'은 내부적으로 확인 'Validation(검증)'은 외부에서 확인받는 것이라고 보면 된다. 자주 사용되는 사용자 확인으로 Phone, Email 을 다룰 것이다.
 
 `src/api/Verification/shared/Verification.graphql` 을 만들고 적용한다.
 
 ```gql
 type Verification {
   id: Int!
-  user: User!
   target: String!
   payload: String!
   key: String!
-  used: Boolean!
   createAt: String!
   updateAt: String
 }
@@ -373,11 +372,9 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import User from "./User";
 
 const PHONE = "PHONE";
 const EMAIL = "EMAIL";
@@ -395,23 +392,20 @@ class Verification extends BaseEntity {
   @Column({ type: "text" })
   key: string;
 
-  @Column({ type: "boolean", default: false })
-  used: boolean;
-
   @CreateDateColumn() createdAt: string;
 
   @UpdateDateColumn() updatedAt: string;
 
   // 핸드폰, 이메일을 인증하기 위한 키를 생성하는 부분
-	// 핸드폰은 5자리 숫자, 이메일은 무작위 문자와 숫자의 나열로 키를 생성한다.
+  // 핸드폰은 5자리 숫자, 이메일은 무작위 문자와 숫자의 나열로 키를 생성한다.
   @BeforeInsert()
   createKey(): void {
     if (this.target === PHONE) {
     	this.key = Math.floor(Math.random() * 100000).toString();
     } else if (this.target === EMAIL) {
     	this.key = Math.random()
-    		.toString(36) // '36' 은 숫자를 문자로 바꿔준다.
-    		.substr(2);
+        .toString(36) // '36' 은 숫자를 문자로 바꿔준다.
+        .substr(2);
     }
   }
 }
@@ -420,9 +414,9 @@ export default Verification;
 ```
 
 - `verificationTarget` 을 불러오고 `@Column({ type: "text", enum: [PHONE, EMAIL] }) target: verificationTarget;` 은 설정하면 둘중 무엇이든 확인 요청이 가능하도록 한다. 나중에 확인 절차에 사용된다.
-- `createKey` 는 테스트 함수다. `@BeforeInsert` 를 이용해 새 Verification 가 생성될 때 먼저 전화번호일 경우 이메일일 경우를 구분해 키를 생성한다.
+- `createKey` 는 확인/인증 키를 생성하는 함수다. `@BeforeInsert` 를 이용해 새 Verification 가 생성될 때 먼저 핸드폰일 경우 이메일일 경우를 구분해 키를 생성한다. 생성된 키는 Server 에서 User(Client) 에게 전달되고 User(Client) 가 키를 입력하면 사용자 인증이 된다.
 
-`src/types/types.d.ts` 파일에 사용자 확인을 위한 `target` 으로 `PHONE`, `EMAIL` 둘다 타입체크 한다. 현재는 둘중 하나만 가능하며 나머지 다른 것들로 확인 절차를 받을 수 없다.
+`src/types/types.d.ts` 파일에 사용자 확인을 위한 `target` 으로 `PHONE`, `EMAIL` 둘다 타입체크 한다. 현재는 둘중 하나만 가능하며 그외 나머지는 확인 절차를 받을 수 없다.
 
 ```typescript
 export type verificationTarget = "PHONE" | "EMAIL";
@@ -557,8 +551,8 @@ chat: Chat[];
 ```
 이렇게 하면 `Chat` 에는 다수의 메세지, 다수의 사용자를 알고 있으니 관계가 저절로 성립된다.
 
-
 ----
+
 ## #1.25 까지 파일 구성
 
 ```
@@ -599,23 +593,24 @@ src
  ┗ schema.ts
 ```
 
-- api: 각 기능별 GraphQL Schema 로 정의된 `.graphql` 과 `resolvers.ts` 파일들, `schema.ts` 에서 모든 파일들이 합쳐지고 `app.ts` 에서 설정된다.
+- api: 각 기능별 GraphQL Schema 로 정의된 `.graphql` 과 `resolvers.ts` 파일들, `schema.ts` 에서 모든 파일들이 합쳐지고 `app.ts` 에서 적용된다.
 - entities: 데이터베이스와 연동시킬 Typescript 로 이루어진 TypeORM Entity 파일들, `ormConfig.ts` 에서 옵션들을 구성하고 `index.ts` 에서 적용된다. 그전에 `typeorm` 이 설치되어야 한다.
 - types: api 디렉토리에 있는 GraphQL Schema 타입 체크를 위해 Typescript 로 변환된 `.d.ts` 파일들, 이전 과정을 보면 api 의 모든 `.graphql` 파일들이 `schema.graphql` 로 합쳐져지고 다시 `types/graph.d.ts` 로 변환된다.
 
-## Resolver
+## Resolver 작업 리스트
 
 ### Public Resolver
 - [x] 로그인 / Facebook(SNS) 가입
-- [ ] 이메일 가입
+- [x] 이메일 가입
 - [x] 이메일 로그인
-- [ ] 핸드폰 번호 인증 시작
-- [ ] 핸드폰 번호 인증 완료
-----------
+- [x] 핸드폰 번호 인증 시작
+- [x] 핸드폰 번호 인증 완료
 
-### Private Resolver (JWT)
+### Authentication
 - [ ] JWT 생성
 - [ ] JWT 인증
+
+### Private Resolver
 - [ ] 이메일 인증
 - [ ] 프로파일 조회
 - [ ] 프로파일 변경
@@ -639,7 +634,7 @@ src
 > NOTE:
 > 
 > **JSON Web Token (JWT)** <br>
-> 웹표준 (RFC7519) 으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인 (self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 'Public Key/Private Key' 쌍으로 서명할 수 있다.
+> 웹표준(RFC7519)으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인(self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 `Public Key/Private Key` 쌍으로 서명할 수 있다. 여기서 `Private Key` 나 `SECRET KEY` 는 같은 개념이다.
 > 
 > **Token?** <br>
 > 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
@@ -647,21 +642,21 @@ src
 > ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
 > https://jwt.io/
 >
-> 토큰을 만들기 위해서는 3가지, Header,Payload, Verify Signature 가 필요하다. 
-> - Header : 위 3가지 정보를 암호화할 방식(alg: 알고리즘), 타입(type) 등.
-> - Payload : 서버에서 보낼 data. 일반적으로 유저의 고유 ID값, 유효기간이 들어간다.
-> - Verify Signature : Base64 방식으로 인코딩한 Header, payload 그리고 SECRET KEY를 더한 후 서명된다. 이것을 알지 못하면 암호화된 것을 복호화 할 수 없다.
+> 토큰을 만들기 위해서는 `Header`, `Payload`, `Verify Signature` 이렇게 3가지가 필요하다. 
+> - `Header` : 위 3가지 정보를 암호화할 방식(alg: 알고리즘), 타입(type) 등.
+> - `Payload` : 서버에서 보낼 '실제 데이터'. 일반적으로 사용자의 고유 ID값, 유효기간이 들어간다.
+> - `Verify Signature` : Base64 방식으로 인코딩한 `Header`, `Payload` 그리고 `SECRET KEY`를 더한 후 서명한다. `Public Key` 는 누구에게든 '배포' 할 수 있다. 그러나 '복호화'하는 것은 `Private Key(SECRET KEY)` 가 있어야만 가능하다. '공인 인증서' 발급/인증 과정과 같다.
 >
 > **JWT 진행과정** <br>
-> ![JWT Progress](https://lh3.googleusercontent.com/nX621vnVrg7WSDOh1d4APpWADSTUVMFIIx0IcjoUx9ltGLyqSmbVRBLi8SIvBT1uydmyQUORj_1CfehqvEcHzaeUU3fDO6PVFO3c7ug97HfORBLO2FGmkUHTJ3CZUv2vfdH_fPMZmA=w720)
+> ![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w720)
 > 
 > 1. 사용자 로그인
-> 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 Payload에 넣는다.
+> 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 `Payload`에 넣는다.
 > 3. JWT 토큰의 유효기간을 설정
-> 4. 암호화할 SECRET KEY를 이용해 Access Token을 발급
+> 4. 암호화할 `SECRET KEY`를 이용해 Access Token을 발급
 > 5. 사용자는 Access Token을 받아 저장 후, 인증이 필요한 요청마다 토큰을 헤더에 실어 보낸다.
-> 6. 서버에서는 해당 토큰의 Verify Signature를 SECRET KEY로 복호화한 후, 조작 여부, 유효기간을 확인
-> 7. 검증이 완료된다면, Payload를 디코딩하여 사용자의 ID에 맞는 데이터를 찾고 요청 데이터를 보낸다.
+> 6. 서버에서는 해당 토큰의 `Verify Signature`를 `SECRET KEY`로 복호화한 후, 조작 여부, 유효기간을 확인
+> 7. 검증이 완료된다면, `Payload`를 디코딩하여 사용자의 ID에 맞는 요청 데이터를 찾고 다시 보낸다.
 >
 > https://velopert.com/2350 <br>
 > https://tansfil.tistory.com/58
@@ -675,10 +670,13 @@ src
 
 ## #1.35 휴대폰 SMS 인증(StartPhoneVerification) Resolver
 
+Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful API 서비스이다. 모듈을 추가하자.
+
 ```bash
 $ yarn add twilio
 ```
 
+Twilio 타입체크를 위한 모듈 설치
 ```bash
 $ yarn add @types/twilio --dev
 ```
