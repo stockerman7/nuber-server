@@ -4,6 +4,7 @@ import {
 	EmailSignUpResponse,
 } from "../../../types/graph";
 import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
 
 const resolvers: Resolvers = {
 	Mutation: {
@@ -25,10 +26,11 @@ const resolvers: Resolvers = {
 					// 새로 가입한 사용자는 DB 에 저장, { ...args } 를 사용한 이유는 User Scheme 중에 EmailSignUpMutationArgs 에
 					// 정의된 Entity(firstName, lastName, email, password, profilePhoto, age, phoneNumber) 만 업데이트 할 것이기 때문
 					const newUser = await User.create({ ...args }).save();
+					const token = createJWT(newUser.id);
 					return {
 						ok: true,
 						error: null,
-						token: "가입이 완료 되었습니다.",
+						token,
 					};
 				}
 			} catch (error) {

@@ -27,8 +27,8 @@ class User extends BaseEntity {
 		return `${this.firstName} ${this.lastName}`;
 	}
 	@PrimaryGeneratedColumn() id: number;
-
-	@Column({ type: "text", unique: true }) // unique: 유일한 값을 가지는
+	// nullable 은 없을 수도 있다는 뜻임
+	@Column({ type: "text", nullable: true })
 	@IsEmail()
 	email: string | null;
 

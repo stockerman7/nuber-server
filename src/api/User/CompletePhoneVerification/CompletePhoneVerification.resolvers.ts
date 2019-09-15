@@ -5,6 +5,7 @@ import {
 	CompletePhoneVerificationResponse,
 } from "../../../types/graph";
 import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
 
 const resolvers: Resolvers = {
 	Mutation: {
@@ -42,15 +43,16 @@ const resolvers: Resolvers = {
 				if (user) {
 					user.verifiedPhoneNumber = true; // 사용자에겐 인증된 폰 번호라고 알려주고
 					user.save(); // DB 저장
+					const token = createJWT(user.id);
 					return {
 						ok: true,
 						error: null,
-						token: "인증이 완료 되었습니다.",
+						token,
 					};
 				} else {
-					// 할당된 User 가 아예 없는 경우
+					// token 을 사용하지 않을 경우
 					return {
-						ok: false,
+						ok: true,
 						error: null,
 						token: null,
 					};

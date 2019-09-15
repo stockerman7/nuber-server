@@ -201,7 +201,7 @@ class User extends BaseEntity {
 export default User;
 ```
 
-여기서는 많은 부분의 `@Column` 들을 생략했다. `src/api/User/shared/User.graphql` 에 키 리스트가 똑같이 여기에도 적용되야 한다는 것을 염두한다.
+`src/api/User/shared/User.graphql` 에 리스트가 똑같이 `User.ts` 에도 적용되야 한다는 것을 염두한다.
 
 `User.graphql` 구성
 
@@ -305,7 +305,7 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 @Entity()
 class User extends BaseEntity {
   ...
-
+  
   @BeforeInsert()
   @BeforeUpdate()
   async savePassword(): Promise<void> {
@@ -319,7 +319,7 @@ class User extends BaseEntity {
   public comparePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }
-  // password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
+  // password 를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
   private hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, BCRYPT_ROUND);
   }
@@ -693,13 +693,15 @@ $ yarn add @types/jsonwebtoken --dev
 3. 발급 전에 JWT 토큰의 유효기간을 설정한다.
 4. 암호화할 `SECRET KEY`를 이용해 Access Token을 발급
 5. 사용자는 Access Token을 받아 저장 후, 인증이 필요한 요청마다 토큰을 헤더에 실어 보낸다.
-6. 서버에서는 해당 토큰의 `Verify Signature`를 `SECRET KEY`로 복호화한 후, 조작 여부, 유효기간을 검증
+6. 서버에서는 해당 토큰의 `Verify Signature`를 `SECRET KEY`로 디코딩 후, 조작 여부, 유효기간을 검증
 7. 검증이 완료되면, `Payload`를 디코딩하여 사용자의 ID에 맞는 요청 데이터를 찾고 다시 전달한다.
+
+6, 7번 과정에서 `SECRET KEY` Decoding(복호화)인지 `Payload` Decoding 인지를 구분해야 한다.
 
 **참고:** 
 https://velopert.com/2350, https://tansfil.tistory.com/58
 
-`createJWT.ts` 에서 구현할 과정은 사용자의 고유 ID 를 받으면 JWT 를 생성하는 일이다(이미지 3, 4번 과정).
+`createJWT.ts` 에서 구현할 과정은 사용자의 고유 ID 를 받으면 JWT 를 생성하는 일이다 (이미지 3, 4번 과정).
 
 ```typescript
 import jwt from "jsonwebtoken";
@@ -712,7 +714,6 @@ const createJWT = (id: number): string => {
 export default createJWT;
 ```
 
-- `jsonwebtoken` 모듈을 불러오기 하고
-- `createJWT` 함수를 생성한다. `number` 타입의 `id` 를 매개변수로 받고 반환은 `string` 타입이 될 것이다.
-- 이제 `token` 을 만드는데 우선 두개의 매개변수가 필요하다. 첫번째는 `id`, 두번째는 `Private Key(SECRET KEY)` 를 생성해주는 양식이다.
-- 두번째 매개변수는 중요하기 때문에 `.env` 환경변수에 저장해 가져오도록 한다. https://passwordsgenerator.net/ 에 접속해 `Private Key(SECRET KEY)`를 생성해주는 옵션들을 선택하고 Generate Password 버튼을 클릭, 양식을 복사한다. 복사한 양식을 `.env` 파일에 `JWT_TOKEN=` 에 붙여넣기 한다. 그리고 `process.env.JWT_TOKEN` 으로 가져온다.
+- `jsonwebtoken` 모듈을 불러오기 하고 `createJWT` 함수를 생성한다. `number` 타입의 `id` 를 매개변수로 받고 반환할 `token` 은 `string` 타입이 될 것이다.
+- 이제 `token` 을 만드는데 우선 두개의 인자가 필요하다. 첫번째는 `id`, 두번째는 `Private Key(SECRET KEY)` 를 생성해주는 양식이다.
+- 두번째 인자는 중요하기 때문에 `.env` 환경변수에 저장해 가져오도록 한다. https://passwordsgenerator.net/ 에 접속해 `Private Key(SECRET KEY)`를 생성해주는 옵션들을 선택하고 Generate Password 버튼을 클릭, 양식을 복사한다. 복사한 양식을 `.env` 파일에 `JWT_TOKEN=` 에 붙여넣기 한다. 그리고 `process.env.JWT_TOKEN` 으로 가져온다.

@@ -1,5 +1,6 @@
 import User from "../../../entities/User";
 import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
 import {
 	EmailSignInMutationArgs,
 	EmailSignInResponse,
@@ -21,12 +22,14 @@ const resolvers: Resolvers = {
 						token: null,
 					};
 				}
+				// 비밀번호 확인(비교)
 				const checkPassword = await user.comparePassword(password);
 				if (checkPassword) {
+					const token = createJWT(user.id);
 					return {
 						ok: true,
 						error: null,
-						token: "가입된 사용자의 이메일입니다.",
+						token,
 					};
 				} else {
 					return {
@@ -36,6 +39,7 @@ const resolvers: Resolvers = {
 					};
 				}
 			} catch (error) {
+				console.log(error);
 				return {
 					ok: false,
 					error: error.message,

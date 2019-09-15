@@ -27,7 +27,6 @@ const resolvers: Resolvers = {
 					payload: phoneNumber,
 					target: "PHONE",
 				}).save();
-				console.log(newVerification);
 				// 인증번호를 받기위해 폰 번호, 키를 보낸다.
 				await sendVerificatoinSMS(newVerification.payload, newVerification.key);
 				return {
