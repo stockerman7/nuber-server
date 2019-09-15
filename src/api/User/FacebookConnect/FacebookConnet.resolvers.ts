@@ -16,6 +16,7 @@ const resolvers: Resolvers = {
 			try {
 				// 먼저 Facebook ID 가 이미 존재하는지 확인
 				const existingUser = await User.findOne({ fbID });
+				console.log("Facebook 기존 사용자: ", existingUser);
 				// 이미 로그인한 사용자가 있다면
 				if (existingUser) {
 					const token = createJWT(existingUser.id);
@@ -39,6 +40,7 @@ const resolvers: Resolvers = {
 					...args,
 					profilePhoto: `http://graph.facebook.com/${fbID}/picture?type=square`,
 				}).save();
+				console.log("Facebook 새로운 사용자: ", newUser);
 				const token = createJWT(newUser.id);
 				return {
 					ok: true,

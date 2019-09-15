@@ -18,7 +18,7 @@ import Chat from "./Chat";
 import Message from "./Message";
 import Ride from "./Ride";
 
-const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
+const BCRYPT_ROUNDS = 10; // 몇번 암호화 할 것인지
 
 @Entity()
 class User extends BaseEntity {
@@ -98,6 +98,10 @@ class User extends BaseEntity {
 
 	@UpdateDateColumn() updatedAt: string;
 
+	// 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
+	public comparePassword(password: string): Promise<boolean> {
+		return bcrypt.compare(password, this.password);
+	}
 	// 미리 사전처리 할 것들(만약 무엇인가를 저장하거나 업데이트를 한다면, 예를들어 암호화된 비밀번호를 얻어오는 것 처럼)
 	@BeforeInsert()
 	@BeforeUpdate()
@@ -105,17 +109,13 @@ class User extends BaseEntity {
 		// void는 return 값을 말한다. 즉 반환 값이 없는 Promise 타입이다.
 		if (this.password) {
 			// awiat: 처리가 완료 될 때까지 기다렸다가 반환(비동기 Promise의 동기 작업이 필요할 시)
-			const hasedPassword = await this.hashPassword(this.password);
-			this.password = hasedPassword; // 암호화된 password 저장
+			const hashedPassword = await this.hashPassword(this.password);
+			this.password = hashedPassword; // 암호화된 password 저장
 		}
-	}
-	// 사용자가 보낸 password 와 이전에 hash(암호화)한 password 를 비교
-	public comparePassword(password: string): Promise<boolean> {
-		return bcrypt.compare(password, this.password);
 	}
 	// password를 암호화하는 private(접근제한) 함수, string 타입인 hash 값을 반환하는 Promise
 	private hashPassword(password: string): Promise<string> {
-		return bcrypt.hash(password, BCRYPT_ROUND); // password 를 hash 화 한다. 두번째 매개변수는 몇번 암호화 할지 숫자
+		return bcrypt.hash(password, BCRYPT_ROUNDS); // password 를 hash 화 한다. 두번째 매개변수는 몇번 암호화 할지 숫자
 	}
 }
 

@@ -4,7 +4,7 @@ import createJWT from "../../../utils/createJWT";
 import {
 	EmailSignInMutationArgs,
 	EmailSignInResponse,
-} from "./../../../types/graph.d";
+} from "./../../../types/graph";
 
 const resolvers: Resolvers = {
 	Mutation: {
@@ -14,8 +14,9 @@ const resolvers: Resolvers = {
 		): Promise<EmailSignInResponse> => {
 			const { email, password } = args;
 			try {
-				const user = await User.findOne({ email });
-				if (!user) {
+				const existingUser = await User.findOne({ email });
+				console.log("Email 기존 사용자:", existingUser);
+				if (!existingUser) {
 					return {
 						ok: false,
 						error: "해당되는 이메일이 없습니다.",
@@ -23,9 +24,9 @@ const resolvers: Resolvers = {
 					};
 				}
 				// 비밀번호 확인(비교)
-				const checkPassword = await user.comparePassword(password);
+				const checkPassword = await existingUser.comparePassword(password);
 				if (checkPassword) {
-					const token = createJWT(user.id);
+					const token = createJWT(existingUser.id);
 					return {
 						ok: true,
 						error: null,
@@ -39,7 +40,6 @@ const resolvers: Resolvers = {
 					};
 				}
 			} catch (error) {
-				console.log(error);
 				return {
 					ok: false,
 					error: error.message,
