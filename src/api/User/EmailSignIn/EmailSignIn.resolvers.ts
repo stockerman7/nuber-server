@@ -12,6 +12,7 @@ const resolvers: Resolvers = {
 			_,
 			args: EmailSignInMutationArgs,
 		): Promise<EmailSignInResponse> => {
+			// 이메일, 비밀번호로 로그인 하니 두개의 인자가 필요하다.
 			const { email, password } = args;
 			try {
 				const existingUser = await User.findOne({ email });

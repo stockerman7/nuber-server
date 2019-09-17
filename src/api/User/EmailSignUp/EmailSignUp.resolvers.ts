@@ -14,6 +14,8 @@ const resolvers: Resolvers = {
 		): Promise<EmailSignUpResponse> => {
 			const { email } = args;
 			// 기존에 있는 사용자는 가입이 아니라 로그인
+			// FacebookConnect 을 먼저 했다면 기존 사용자 이기 때문에 새로운 비밀번호가 적용되지 않을 것이다.
+			// 나중에 EmailSignIn에서 비교할 비밀번호가 없기 때문에 bcrypt.compare Error 가 발생한다.
 			try {
 				const existingUser = await User.findOne({ email });
 				console.log("Email 기존 가입자: ", existingUser);
