@@ -305,7 +305,7 @@ const BCRYPT_ROUND = 10; // 몇번 암호화 할 것인지
 @Entity()
 class User extends BaseEntity {
   ...
-  
+
   @BeforeInsert()
   @BeforeUpdate()
   async savePassword(): Promise<void> {
@@ -610,7 +610,7 @@ src
 
 ### Authentication
 - [x] JWT 생성
-- [ ] JWT 인증
+- [x] JWT 인증
 
 ### Private Resolver
 - [ ] 이메일 인증
