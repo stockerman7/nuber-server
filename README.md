@@ -677,11 +677,11 @@ Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful 
 
 ![SMS Geographic Premissions Country Selected](https://lh3.googleusercontent.com/5YLGjjRzlsryDn2-YG5C0CDkzfz3yuPw-pJOVlVPVyZLGTl0nqYzbigjR2cmxNmDKPj-dPe1jc-8q3ETNjd4Rnw1SmVA-xnxmLbuWllTMxiAAU9fi1iZzqF8MluMCFXfC9jWB81q7A=w720)
 
-![Build with Programmable SMS](https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK&sz=w720)
+<image src="https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK" alt="Build with Programmable SMS" width="720">
 
 좌측 메뉴에 `Learn & Build` 를 선택한다. `From` 은 Twilio 에서 보내는 발신 전화이며 `To` 는 한국에서 수신자의 번호이다. 현재 수신자는 구입한 사람으로 되어있다. 나중에 `To` 는 Client 측에서 인증시 입력하면 Client 측으로 5자리 숫자로 구성된 인증 SMS가 전달될 것이다.
 
-![Twilio Dashboard](https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk&sz=w720)
+<image src="https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk" alt="Twilio Dashboard" width="720">
 
 Dashboard 하단에 `SID`, `AUTH TOKEN` 이 보인다. `AUTH TOKEN` 은 인증 정보가 오고갈 때 필요한 토큰을 말한다. 중요하기 때문에 외부로 노출되면 안된다. 다음 절에선 `SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 이렇게 3가지로 휴대폰 SMS 인증을 해보자.
 
@@ -702,12 +702,12 @@ TWILIO_TOKEN=Twilio에서 발행된 내 Token
 #### StartPhoneVerification.graphql
 ```graphql
 type StartPhoneVerificationResponse {
-	ok: Boolean!
-	error: String
+  ok: Boolean!
+  error: String
 }
 
 type Mutation {
-	StartPhoneVerification(phoneNumber: String!): StartPhoneVerificationResponse!
+  StartPhoneVerification(phoneNumber: String!): StartPhoneVerificationResponse!
 }
 ```
 
@@ -817,41 +817,41 @@ export const sendVerificatoinSMS = (to: string, key: string) => {
 
 `async/await` 은 좀 더 간편하게 비동기 처리를 구현할 수 있도록 ES7에서 도입되었다. `new Promise()` 를 다른 함수로 감싸고 `return` 하지 않고 함수 앞에 `async` 를 넣는 것 만으로도 비동기 처리가 가능하다.
 
-![async/await_예외처리_00](https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf&sz=w600)
+<image src="https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf" alt="async/await_예외처리_00" width="600">
 
 함수 하나는 `Promise` 를 반환하는 함수이고 다른 하나는 `async` 를 함수 앞에 붙여 구현한 것이다. 둘다 똑같이 `Promise` 객체를 반환한다. 특히 `async` 는 일반 함수처럼 `return` 하는 것만으로도 `Promise` 를 반환한다.
 
-![async/await_예외처리_01](https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7&sz=w600)
+<image src="https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7" alt="async/await_예외처리_01" width="600">
 
 그렇다면 `error` 를 반환해야 할 경우는 어떨까? 일반적인 `Promise` 구문은 `reject` 함수를 이용해 에러를 전달한다. 그러나 `async` 는 `throw` (흔히 `throw new Error("...")` 로 만들어 전달한다) 를 반환한다. 자세히보면 둘 다 `Uncaught` 가 되었다. `Uncaught` 구문이 나타났다는 것은 콜스택(호출순서)에서 에러가 난 시점 이후로 코드는 동작하지 않는다는 것을 말한다. 그러나 때때로 에러가 나더라도 이후 시점의 코드가 계속 동작해야할 경우는 어떻게 처리 할까?
 
-![async/await_예외처리_02](https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl&sz=w600)
+<image src="https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl" alt="async/await_예외처리_02" width="600">
 
 `.catch()` 를 사용해 에러를 예외처리 하면 가능하다. 더 이상 `Uncaught` 가 나타나지 않으며 제대로 동작한다.
 
-![async/await_예외처리_03](https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo&sz=w600)
+<image src="https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo" alt="async/await_예외처리_03" width="600">
 
 `await` 은 `async`, `Promise` 안에서만 설정/동작이 가능하고 비동기 처리 안에서도 처리를 기다려야 할 경우 사용한다. `await` 없이 `wait(3)` 함수 호출은 비동기 처리이기 때문에 바로 다음 `console.log(new Date())` 로 넘어가 출력한다.
 
-![async/await_예외처리_04](https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS&sz=w600)
+<image src="https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS" alt="async/await_예외처리_04" width="600">
 
 그러나 `await` 을 적용한 시점에서 부터는 3초 기다리고 다음 `console.log(new Date())` 가 출력된다.
 
-![async/await_예외처리_05](https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT&sz=w600)
+<image src="https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT" alt="async/await_예외처리_05" width="600">
 
-![async/await_예외처리_06](https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R&sz=w600)
+<image src="https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R" alt="async/await_예외처리_06" width="600">
 
 이제 `async`, `await` 의 예외처리도 `try/catch` 나 `.catch()` 를 사용하지 않으면 `Uncaught` 경고가 나온다.
 
-![async/await_예외처리_07](https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW&sz=w600)
+<image src="https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW" alt="async/await_예외처리_07" width="600">
 
 이를 위해 `async` 안에도 `try/catch` 구문이나 `await` 함수에 `.catch()` 를 적용해주면 간단히 해결된다.
 
-![async/await_예외처리_08](https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m&sz=w600)
+<image src="https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m" alt="async/await_예외처리_08" width="600">
 
 만약 `const result` 변수를 추가해 반환된 결과가 무엇인지 출력해보면 어떻게 될까?
 
-![async/await_예외처리_09](https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI&sz=w600)
+<image src="https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI" alt="async/await_예외처리_09" width="600">
 
 바로 `undefined` 가 출력된다. 이것은 `wait(3)` 함수의 반환결과가 아니다. 뒤로 이어지는 `.catch()` 함수가 `reject` 가 던진 에러를 받고 에러를 출력할 뿐 `return` 한 결과가 없기 때문이다.
 
@@ -904,21 +904,21 @@ export default resolvers;
 
 이제 `http://localhost:4000/playground` 로 접속해서 실제 핸드폰 인증을 보내도록 한다 (주의: PostgresQL 에 접속되있어야 한다).
 
-![Start_Phone_Verification_Result_00](https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI&sz=w720)
+<image src="https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI" alt="Start_Phone_Verification_Result_00" width="720">
 
-![Start_Phone_Verification_Result_01](https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad&sz=w640)
+<image src="https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad" alt="Start_Phone_Verification_Result_01" width="500">
 
 위에서 처럼 `console.log(newVerification)` 의 결과가 출력된 것을 볼 수 있다.
 
-![Start_Phone_Verification_Result_02](https://drive.google.com/uc?id=1MLEnnNoN7iCAkRk4IUtMOFHE6yOR-DsY&sz=w360)
+<image src="https://drive.google.com/uc?id=1MLEnnNoN7iCAkRk4IUtMOFHE6yOR-DsY" alt="Start_Phone_Verification_Result_02" width="320">
 
 폰에도 SMS 메세지가 온 것을 볼 수 있다.
 
-![Start_Phone_Verification_Result_03](https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P&sz=w720)
+<image src="https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P" alt="Start_Phone_Verification_Result_03" width="720">
 
 Twilio 에서도 SMS 메세지를 보낸 결과가 나타난다.
 
-![Start_Phone_Verification_Result_04](https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR&sz=w720)
+<image src="https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR" alt="Start_Phone_Verification_Result_04" width="720">
 
 ----
 
@@ -1158,7 +1158,7 @@ $ yarn add @types/jsonwebtoken --dev
 > ### Token?
 > 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰은 서버로부터 접근 권한을 부여 받는다. <br>
 > 
-> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
+> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w720)
 > https://jwt.io/
 >
 > 토큰을 만들기 위해서는 `Header`, `Payload`, `Verify Signature` 이렇게 3가지가 필요하다. 
@@ -1170,7 +1170,7 @@ $ yarn add @types/jsonwebtoken --dev
 우선 JWT 가 어떻게 이루어지는지 진행과정을 간략하게 다룰 필요가 있다.
 
 ### JWT 진행과정 <br>
-![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w720)
+![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w500)
 
 1. 사용자 로그인
 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 `Payload`에 넣는다.
@@ -1383,17 +1383,17 @@ const resolvers: Resolvers = {
 ## #1.43 Testing Authentication Resolvers
 
 #### Facebook 접속 인증 테스트
-![Facebook 접속 인증 테스트](https://drive.google.com/uc?id=1fJjj6JDWUgRcuWV6tNPS2qJ0mzq3Fsmh&sz=w720)
+<image src="https://drive.google.com/uc?id=1fJjj6JDWUgRcuWV6tNPS2qJ0mzq3Fsmh" alt="Facebook 접속 인증 테스트" width="720">
 
 #### 핸드폰 인증 테스트
-![핸드폰 인증 테스트](https://drive.google.com/uc?id=1IdHo7tjb_v66j321OMLz-BxlEtA_bNDl&sz=w720)
+<image src="https://drive.google.com/uc?id=1IdHo7tjb_v66j321OMLz-BxlEtA_bNDl" alt="핸드폰 인증 테스트" width="720">
 
 #### 이메일 가입 인증 테스트
-![이메일 가입 인증 테스트](https://drive.google.com/uc?id=12Umrkq3sica7wkDqIC0cAF26mJWMrclj&sz=w720)
+<image src="https://drive.google.com/uc?id=12Umrkq3sica7wkDqIC0cAF26mJWMrclj" alt="이메일 가입 인증 테스트" width="720">
 
 이메일 가입여부를 PostgresQL 에서 사용자의 DB 리스트가 생성된 것을 볼 수 있다.
 
-![PostgresQL DB Search](https://drive.google.com/uc?id=1HvaAE53ATtttILHBTIccSolDJvtuHQiZ&sz=w720)
+<image src="https://drive.google.com/uc?id=1HvaAE53ATtttILHBTIccSolDJvtuHQiZ" alt="PostgresQL DB Search" width="720">
 
 
 테스트는 `EmailSignUp`, `EmailSignIn`, `FacebookConnect` 순으로 하는 것이 좋다. 왜일까?
@@ -1514,13 +1514,13 @@ class App {
 #### GetMyProfile.graphql
 ```graphql
 type GetMyProfileResponse {
-	ok: Boolean!
-	error: String
-	user: User
+  ok: Boolean!
+  error: String
+  user: User
 }
 
 type Query {
-	GetMyProfile: GetMyProfileResponse!
+  GetMyProfile: GetMyProfileResponse!
 }
 ```
 
@@ -1594,7 +1594,7 @@ GetMyProfile: async (parent, args, context, info) => {
 
 결국 `resolverFunction` 인자로 보낸 익명 함수는 사용자 Currying 에 맞게 설정만 되는 것이고 실제로 `GetMyProfile` 이 호출되어야 `resolved` 결과를 반환 받는 것이다. Playground 테스트 결과 잘 동작한다.
 
-![GetMyProfile Test](https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt&sz=w720)
+<image src="https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt" alt="GetMyProfile Test" width="720">
 
 현재까지 우리가 작업한 리스트를 보도록하자.
 
@@ -1612,8 +1612,9 @@ GetMyProfile: async (parent, args, context, info) => {
 - [x] JWT 인증
 
 ### Private Resolver
-- [ ] 이메일 인증
 - [x] 프로파일 조회
+- [ ] 이메일 인증 요청
+- [ ] 이메일 인증 완료
 - [ ] 프로파일 변경
 - [ ] 운전 모드 변환
 - [ ] 지역 / 위치 분석
@@ -1652,6 +1653,30 @@ $ yarn add mailgun-js && yarn add @types/mailgun-js --dev
 
 그리고 `src/utils/sendEmail.ts` 파일을 만든다.
 
-```typesript
+```typescript
+import Mailgun from "mailgun-js";
 
+// 이메일 인증 API 연결
+const mailGunClient = new Mailgun({
+  apiKey: process.env.MAILGUN_API_KEY || "",
+  domain: "sandbox05dde9880f514a26ba4f58835af4a58b.mailgun.org",
+});
+
+// 이메일 인증 API 를 통해 전달할 대상과 내용들
+const sendEmail = (subject: string, html: string) => {
+  const emailData = {
+    from: "stockerman7@gmail.com",
+    to: "stockerman7@gmail.com",
+    subject,
+    html,
+  };
+  return mailGunClient.messages().send(emailData);
+};
+
+// 실제로 인증 이메일을 보내는 역할
+export const sendVerificationEmail = (fullName: string, key: string) => {
+  const emailSubject = `안녕하세요. ${fullName}님, 당신의 이메일 인증입니다.`;
+  const emailBody = `<a href="http://nuber.com/verification/${key}/">여기<a>를 클릭해 당신의 이메일을 인증해주세요.`;
+  sendEmail(emailSubject, emailBody);
+};
 ```

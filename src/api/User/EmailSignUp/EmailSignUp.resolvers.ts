@@ -6,6 +6,7 @@ import {
 } from "../../../types/graph";
 import { Resolvers } from "../../../types/resolvers";
 import createJWT from "../../../utils/createJWT";
+import { sendVerificationEmail } from "../../../utils/sendEmail";
 
 const resolvers: Resolvers = {
 	Mutation: {
@@ -27,22 +28,39 @@ const resolvers: Resolvers = {
 						token: null,
 					};
 				} else {
-					// 새로 가입한 사용자는 DB 에 저장, { ...args } 를 사용한 이유는 User Scheme 중에 EmailSignUpMutationArgs 에
-					// 정의된 Entity(firstName, lastName, email, password, profilePhoto, age, phoneNumber) 만 업데이트 할 것이기 때문
-					const newUser = await User.create({ ...args }).save();
-					if (newUser.email) {
-						const emailVerification = await Verification.create({
-							payload: newUser.email,
-							target: "EMAIL",
-						});
+					// 폰인증 받고 가입했는데 이메일까지 인증/가입을 중복해서 받지 않으려면 확인해야 한다.
+					const phoneVerification = await Verification.findOne({
+						payload: args.phoneNumber,
+						verified: true,
+					});
+					if (phoneVerification) {
+						// 새로 가입한 사용자는 DB 에 저장, { ...args } 를 사용한 이유는 User Scheme 중에 EmailSignUpMutationArgs 에
+						// 정의된 Entity(firstName, lastName, email, password, profilePhoto, age, phoneNumber) 만 업데이트 할 것이기 때문
+						const newUser = await User.create({ ...args }).save();
+						if (newUser.email) {
+							const emailVerification = await Verification.create({
+								payload: newUser.email,
+								target: "EMAIL",
+							}).save();
+							await sendVerificationEmail(
+								newUser.fullName,
+								emailVerification.key,
+							);
+						}
+						// console.log("Email 새로운 가입자: ", newUser);
+						const token = createJWT(newUser.id);
+						return {
+							ok: true,
+							error: null,
+							token,
+						};
+					} else {
+						return {
+							ok: false,
+							error: "당신의 폰번호는 인증되지 않았습니다.",
+							token: null,
+						};
 					}
-					// console.log("Email 새로운 가입자: ", newUser);
-					const token = createJWT(newUser.id);
-					return {
-						ok: true,
-						error: null,
-						token,
-					};
 				}
 			} catch (error) {
 				return {
