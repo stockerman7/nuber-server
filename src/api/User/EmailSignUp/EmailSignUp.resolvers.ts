@@ -41,7 +41,7 @@ const resolvers: Resolvers = {
 							const emailVerification = await Verification.create({
 								payload: newUser.email,
 								target: "EMAIL",
-							}).save();
+							}).save(); // 생성/수정 시에는 저장한다.
 							await sendVerificationEmail(
 								newUser.fullName,
 								emailVerification.key,

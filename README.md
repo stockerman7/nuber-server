@@ -817,41 +817,41 @@ export const sendVerificatoinSMS = (to: string, key: string) => {
 
 `async/await` 은 좀 더 간편하게 비동기 처리를 구현할 수 있도록 ES7에서 도입되었다. `new Promise()` 를 다른 함수로 감싸고 `return` 하지 않고 함수 앞에 `async` 를 넣는 것 만으로도 비동기 처리가 가능하다.
 
-<image src="https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf" alt="async/await_예외처리_00" width="600">
+<image src="https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf" alt="async/await_예외처리_00" width="720">
 
 함수 하나는 `Promise` 를 반환하는 함수이고 다른 하나는 `async` 를 함수 앞에 붙여 구현한 것이다. 둘다 똑같이 `Promise` 객체를 반환한다. 특히 `async` 는 일반 함수처럼 `return` 하는 것만으로도 `Promise` 를 반환한다.
 
-<image src="https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7" alt="async/await_예외처리_01" width="600">
+<image src="https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7" alt="async/await_예외처리_01" width="720">
 
 그렇다면 `error` 를 반환해야 할 경우는 어떨까? 일반적인 `Promise` 구문은 `reject` 함수를 이용해 에러를 전달한다. 그러나 `async` 는 `throw` (흔히 `throw new Error("...")` 로 만들어 전달한다) 를 반환한다. 자세히보면 둘 다 `Uncaught` 가 되었다. `Uncaught` 구문이 나타났다는 것은 콜스택(호출순서)에서 에러가 난 시점 이후로 코드는 동작하지 않는다는 것을 말한다. 그러나 때때로 에러가 나더라도 이후 시점의 코드가 계속 동작해야할 경우는 어떻게 처리 할까?
 
-<image src="https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl" alt="async/await_예외처리_02" width="600">
+<image src="https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl" alt="async/await_예외처리_02" width="720">
 
 `.catch()` 를 사용해 에러를 예외처리 하면 가능하다. 더 이상 `Uncaught` 가 나타나지 않으며 제대로 동작한다.
 
-<image src="https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo" alt="async/await_예외처리_03" width="600">
+<image src="https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo" alt="async/await_예외처리_03" width="720">
 
 `await` 은 `async`, `Promise` 안에서만 설정/동작이 가능하고 비동기 처리 안에서도 처리를 기다려야 할 경우 사용한다. `await` 없이 `wait(3)` 함수 호출은 비동기 처리이기 때문에 바로 다음 `console.log(new Date())` 로 넘어가 출력한다.
 
-<image src="https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS" alt="async/await_예외처리_04" width="600">
+<image src="https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS" alt="async/await_예외처리_04" width="720">
 
 그러나 `await` 을 적용한 시점에서 부터는 3초 기다리고 다음 `console.log(new Date())` 가 출력된다.
 
-<image src="https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT" alt="async/await_예외처리_05" width="600">
+<image src="https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT" alt="async/await_예외처리_05" width="720">
 
-<image src="https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R" alt="async/await_예외처리_06" width="600">
+<image src="https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R" alt="async/await_예외처리_06" width="720">
 
 이제 `async`, `await` 의 예외처리도 `try/catch` 나 `.catch()` 를 사용하지 않으면 `Uncaught` 경고가 나온다.
 
-<image src="https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW" alt="async/await_예외처리_07" width="600">
+<image src="https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW" alt="async/await_예외처리_07" width="720">
 
 이를 위해 `async` 안에도 `try/catch` 구문이나 `await` 함수에 `.catch()` 를 적용해주면 간단히 해결된다.
 
-<image src="https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m" alt="async/await_예외처리_08" width="600">
+<image src="https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m" alt="async/await_예외처리_08" width="720">
 
 만약 `const result` 변수를 추가해 반환된 결과가 무엇인지 출력해보면 어떻게 될까?
 
-<image src="https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI" alt="async/await_예외처리_09" width="600">
+<image src="https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI" alt="async/await_예외처리_09" width="720">
 
 바로 `undefined` 가 출력된다. 이것은 `wait(3)` 함수의 반환결과가 아니다. 뒤로 이어지는 `.catch()` 함수가 `reject` 가 던진 에러를 받고 에러를 출력할 뿐 `return` 한 결과가 없기 때문이다.
 
@@ -906,7 +906,7 @@ export default resolvers;
 
 <image src="https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI" alt="Start_Phone_Verification_Result_00" width="720">
 
-<image src="https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad" alt="Start_Phone_Verification_Result_01" width="500">
+<image src="https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad" alt="Start_Phone_Verification_Result_01" width="720">
 
 위에서 처럼 `console.log(newVerification)` 의 결과가 출력된 것을 볼 수 있다.
 
@@ -1159,6 +1159,7 @@ $ yarn add @types/jsonwebtoken --dev
 > 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰은 서버로부터 접근 권한을 부여 받는다. <br>
 > 
 > ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w720)
+> 
 > https://jwt.io/
 >
 > 토큰을 만들기 위해서는 `Header`, `Payload`, `Verify Signature` 이렇게 3가지가 필요하다. 
@@ -1170,7 +1171,7 @@ $ yarn add @types/jsonwebtoken --dev
 우선 JWT 가 어떻게 이루어지는지 진행과정을 간략하게 다룰 필요가 있다.
 
 ### JWT 진행과정 <br>
-![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w500)
+![JWT Progress](https://lh3.googleusercontent.com/kY63eJiIsGXslgFxHNWnQUls3rrTj1d2LDcEmR-BCi3RZHTD7GzvU6w-MzwLh5m2GC8uu6xQE9N-rfeNYec9vSI-b5DYQv_YsypDC4h6OzOWy5uY9mO9HFrCjYVWihtLOSljK3V4gg=w640)
 
 1. 사용자 로그인
 2. 서버에서는 계정정보를 읽어 사용자를 확인 후, 사용자의 고유한 ID값을 부여하고 기타 정보와 함께 `Payload`에 넣는다.
