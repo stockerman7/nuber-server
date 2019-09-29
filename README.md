@@ -72,7 +72,7 @@ export default connectionOptions;
 
 연결 옵션을 설정하고 특히 `entities` 는 데이터베이스와 연결하기 위헤 모든 모델 파일이 있는 Typescript Schema 들을 가져온다. `*.*` 는 확장자가 `.ts`, `.js` 가 될 수도 있다는 뜻이다.
 
-> NOTE: Entity(개체) 는 컴퓨터 세계에서 정보/의미의 최소 단위를 말한다. 흔히 Object(객체)와 혼동하기 쉬운데 객체는 사물이 가지는 속성 단위를 말한다. 즉 정보 단위냐 속성 단위냐의 차이점이 있다.
+> **NOTE:** Entity(개체) 는 컴퓨터 세계에서 정보/의미의 최소 단위를 말한다. 흔히 Object(객체)와 혼동하기 쉬운데 객체는 사물이 가지는 속성 단위를 말한다. 즉 정보 단위냐 속성 단위냐의 차이점이 있다.
 
 그리고 TypeORM 이 적용된 데이터베이스 접속을 우선적으로 하고 앱을 실행해야 한다. `index.ts` 안에 다음과 같이 추가/변경 한다.
 
@@ -351,7 +351,7 @@ class User extends BaseEntity {
 
 `src/api/Verification/shared/Verification.graphql` 을 만들고 적용한다.
 
-```gql
+```graphql
 type Verification {
   id: Int!
   target: String!
@@ -599,18 +599,20 @@ src
 - entities: 데이터베이스와 연동시킬 Typescript 로 이루어진 TypeORM Entity 파일들, `ormConfig.ts` 에서 옵션들을 구성하고 `index.ts` 에서 적용된다. 그전에 `typeorm` 이 설치되어야 한다.
 - types: api 디렉토리에 있는 GraphQL Schema 타입 체크를 위해 Typescript 로 변환된 `.d.ts` 파일들, 이전 과정을 보면 api 의 모든 `.graphql` 파일들이 `schema.graphql` 로 합쳐져지고 다시 `types/graph.d.ts` 로 변환된다.
 
+----
+
 ## Resolver 작업 리스트
 
 ### Public Resolver
-- [x] 로그인 / Facebook(SNS) 가입
-- [x] 이메일 가입
-- [x] 이메일 로그인
-- [x] 핸드폰 번호 인증 시작
-- [x] 핸드폰 번호 인증 완료
+- [ ] 로그인 / Facebook(SNS) 가입
+- [ ] 이메일 가입
+- [ ] 이메일 로그인
+- [ ] 핸드폰 번호 인증 시작
+- [ ] 핸드폰 번호 인증 완료
 
 ### Authentication
-- [x] JWT 생성
-- [x] JWT 인증
+- [ ] JWT 생성
+- [ ] JWT 인증
 
 ### Private Resolver
 - [ ] 이메일 인증
@@ -639,9 +641,79 @@ src
 
 ----
 
-## #1.35 휴대폰 SMS 인증(StartPhoneVerification) Resolver
+## #1.34 Twilio 가입
 
-Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful API 서비스이다. 모듈을 추가하자.
+Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful API 서비스이다. 먼저 Twilio 가입을 하고 전화번호를 구입한다.
+
+> **NOTE:**
+> 
+> ### RESTful API?
+> 
+> Representational State Transfer 약자이다. 자원을 이름(자원의 표현)으로 구분해 해당 자원의 상태(정보)를 주고 받는 모든 것을 의미한다.
+> 
+> 여기서 **자원의 표현**이라는 말은 인터넷 프로토콜인 HTTP URI(Uniform Resource Identifier)를 말한다.
+> 
+> 그렇다면 **상태를 전달**한다는 것은 무슨 말일까? 이것은 데이터가 요청되는 시점의 자원의 상태를 전달을 말하는데 HTTP Method(POST, GET, PUT, DELETE)를 통해 CRUD Operation 한다. 흔히 JSON, XML 을 통해 데이터를 주고 받는다. 웹의 장점을 최대한 활용하는 아키텍처 스타일이다.
+
+![Twilio Buy](https://lh3.googleusercontent.com/mpHlAu7w2d_qtctdN2euJNLZsS9NrZhI8MTZ6LfD37HGdKQOzeYEVK_3OgQeswokZhbTzLte8sibHNbrq7rnxKTI4Mw4ubvv0e1KqL6mLKRtPlAAPxJgoOU0PjfJo-QQ-JXMmKaAog=w720)
+
+우측 검색창에 `Buy A Number` 를 검색한다.
+
+![Twilio Phone Number Search](https://lh3.googleusercontent.com/OUeiirKFejhBel0WxrS5_oIp4yVETGYcas3JIbsfmezKM9JeHDhpXnXsAD_56v_GBNZStfI07uU5r3ydIGQj_Z1MGo0HdUr4gcKioBOCnyBLQJW0ndLnB--FAWXDDxM6fipBr3EqFw=w720)
+
+현재 한국전화는 이용에 어려움이 있다. 이용 제한 국가를 제외한 국가를 선택하고 '지역번호'를 아무거나 선택해 검색한다.
+
+![Twilio Availiable Phone Number](https://lh3.googleusercontent.com/gnhPq5xHPi41cR6ZfWKNm1q_AB5lqwsdnjM2li3MQE1hJJrgJcMDFXtCNdr4yQ_Ul_GQv0kNz4Bm4rNM-K7twOWuOOBlZ7gPoqs2tBzUvAKXc7Jr6EIrXhzJ6trBEKQMpk98x93U5Q=w720)
+
+검색으로 나온 리스트는 현재 사용 가능한 번호다. 우측에 `Buy` 버튼을 눌러 구입한다. $1.00 밖에 하지 않기 때문에 무료다.
+
+![Twilio SMS Geographic Permissions](https://lh3.googleusercontent.com/qADA1fgLTUii55DaHNcCm3Ak_R1pFStnNbRUcpufhReb2nTgCTw4hO4NbYYyTMTI7utHxZUgJgmHH39LNwYJEvlQNIlOUBrfAtckVM1Ea_uQuF8bHWKa8JOomZsTUiQPnIsD96feiw=w720)
+
+구입을 완료한 후, 이제 검색창에 SMS 로 검색해 `SMS Geographic Permissions` 를 선택한다.
+
+![SMS Geographic Permissions Country](https://lh3.googleusercontent.com/29_Kik-FkG54Hylvy4oJW7Ttkot5OD1Z5wvoUbEpcNnKOamtxC7WSdRHMPrXjtINhAiJRCB_NRFefuO55Yvliylubknpn6t_DnmctR4BrWPx0_OPgAKn_Ot_i4DiSv5XeZf-vUpxpQ=w720)
+
+메세지를 보낼 대상 국가를 선택하는 화면이 나타난다. 한국으로 SMS 를 전달할 것이기 때문에 Korea 로 선택한다.
+
+![SMS Geographic Premissions Country Selected](https://lh3.googleusercontent.com/5YLGjjRzlsryDn2-YG5C0CDkzfz3yuPw-pJOVlVPVyZLGTl0nqYzbigjR2cmxNmDKPj-dPe1jc-8q3ETNjd4Rnw1SmVA-xnxmLbuWllTMxiAAU9fi1iZzqF8MluMCFXfC9jWB81q7A=w720)
+
+![Build with Programmable SMS](https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK&sz=w720)
+
+좌측 메뉴에 `Learn & Build` 를 선택한다. `From` 은 Twilio 에서 보내는 발신 전화이며 `To` 는 한국에서 수신자의 번호이다. 현재 수신자는 구입한 사람으로 되어있다. 나중에 `To` 는 Client 측에서 인증시 입력하면 Client 측으로 5자리 숫자로 구성된 인증 SMS가 전달될 것이다.
+
+![Twilio Dashboard](https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk&sz=w720)
+
+Dashboard 하단에 `SID`, `AUTH TOKEN` 이 보인다. `AUTH TOKEN` 은 인증 정보가 오고갈 때 필요한 토큰을 말한다. 중요하기 때문에 외부로 노출되면 안된다. 다음 절에선 `SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 이렇게 3가지로 휴대폰 SMS 인증을 해보자.
+
+----
+
+## #1.35 휴대폰 SMS 인증(StartPhoneVerification) 시작
+
+Twilio 에서 얻은 `SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 를 가지고 `.env` 에 다음 변수에 각각 값으로 추가한다.
+
+```bash
+TWILIO_SID=Account SID
+TWILIO_PHONE=+82로 시작하는 휴대폰번호
+TWILIO_TOKEN=Twilio에서 발행된 내 Token
+```
+
+`src/api/User` 에 `StartPhoneVerification` 디렉토리를 추가하고 그 안에 `StartPhoneVerification.graphql`, `StartPhoneVerification.resolvers.ts` 파일을 생성한다.
+
+#### StartPhoneVerification.graphql
+```graphql
+type StartPhoneVerificationResponse {
+	ok: Boolean!
+	error: String
+}
+
+type Mutation {
+	StartPhoneVerification(phoneNumber: String!): StartPhoneVerificationResponse!
+}
+```
+
+`StartPhoneVerification` 은 폰번호를 인자로 받고 결과는 `ok`, `error` 로 받는다.
+
+이제 Twilio 모듈을 추가하자.
 
 ```bash
 $ yarn add twilio
@@ -651,6 +723,418 @@ Twilio 타입체크를 위한 모듈 설치
 ```bash
 $ yarn add @types/twilio --dev
 ```
+
+이제 실제로 SMS 인증이 폰에 전달되도록 해보자.
+
+#### StartPhoneVerification.resolvers.ts
+```typescript
+import Verification from "../../../entities/Verification";
+import {
+  StartPhoneVerificationMutationArgs,
+  StartPhoneVerificationResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import { sendVerificatoinSMS } from "../../../utils/sendSMS";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    StartPhoneVerification: async (
+      _,
+      args: StartPhoneVerificationMutationArgs,
+    ): Promise<StartPhoneVerificationResponse> => {
+      const { phoneNumber } = args;
+      try {
+        const existingVerification = await Verification.findOne({
+          payload: phoneNumber,
+        });
+        // 존재하는 인증이 있는지 여부, 이미 존재하는 인증은 제거
+        if (existingVerification) {
+          existingVerification.remove();
+        }
+        // SMS 인증번호를 받기 위해 client 폰 번호를 서버측에 보낸다.
+        // 결과적으로 인증된 건이 있건 없건 새로 생성함, 그리고 저장함
+        const newVerification = await Verification.create({
+          payload: phoneNumber,
+          target: "PHONE",
+        }).save();
+        // 인증을 하기 위해 Client 측으로 폰 번호, 인증키를 보낸다.
+        await sendVerificatoinSMS(newVerification.payload, newVerification.key);
+        return {
+          ok: true,
+          error: null,
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+        };
+      }
+    },
+  },
+};
+
+export default resolvers;
+```
+
+`StartPhoneVerification` 에서 필요한 `args` 인자로 `phoneNumber` 를 받는다. `phoneNumber` 를 가지고 사용자 여부를 찾고 있다면 기존 사용자 인증을 제거한다.
+
+없다면 새로운 `PHONE` 인증을 새로 생성한다(`Verification.ts` 에서 `createKey()` 가 먼저 호출되면서 `target === PHONE` 을 판단해 5자리 숫자를 생성한다는 것을 알아두자). 그리고 생성된 정보를 DB 에 저장한다. 그 다음 `sendVerificationSMS` 함수로 `phoneNumber`, 인증할 숫자 5자리인 `key` 를 인자로 전달해 사용자에게 인증해달라고 SMS 로 보내게 된다.
+
+
+`src/utils/sendSMS.ts` 에 `sendVerificationSMS` 함수를 구현한 코드를 보도록 하자.
+
+#### sendSMS.ts
+
+```typescript
+// 여기서는 Twilio 서버 측에서 SMS 인증을 사용자에게 보낸다.
+// 특히 SMS 인증 번호를 생성하는 함수, 보내는 함수를 따로 만드는 것이 좋다.
+import Twilio from "twilio";
+
+const twilioClient = Twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+
+// SMS 인증 번호를 생성하는 부분
+export const sendSMS = (to: string, body: string) => {
+  // client 에게 message 를 새로 create(생성) 해서 보낸다.
+  return twilioClient.messages.create({
+    body, // body 가 인증번호일 것이다.
+    to,
+    from: process.env.TWILIO_PHONE, // SMS를 보내는 서버측(Twilio) 폰 번호
+  });
+};
+
+// SMS 인증 번호를 보내는 부분
+export const sendVerificatoinSMS = (to: string, key: string) => {
+  sendSMS(to, `다음과 같은 인증번호를 입력해주세요: ${key}`);
+};
+```
+
+- 두개의 함수중 `sendSMS` 는 어떤 사용자에게 보낼지 `to` 인자와 인증번호가 포함된 본문인 `body` 를 받아 `twilioClient.message` 를 생성해 누가 보낸 것인지 `from` 을 포함시켜 보낸다.
+- `sendVerificationSMS` 함수는 `to` 와 인증키를 인자로 갖는 `sendSMS` 를 감싸는 함수다.
+
+----
+
+## async/await 그리고 예외 처리(번외)
+
+`async/await` 은 좀 더 간편하게 비동기 처리를 구현할 수 있도록 ES7에서 도입되었다. `new Promise()` 를 다른 함수로 감싸고 `return` 하지 않고 함수 앞에 `async` 를 넣는 것 만으로도 비동기 처리가 가능하다.
+
+![async/await_예외처리_00](https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf&sz=w600)
+
+함수 하나는 `Promise` 를 반환하는 함수이고 다른 하나는 `async` 를 함수 앞에 붙여 구현한 것이다. 둘다 똑같이 `Promise` 객체를 반환한다. 특히 `async` 는 일반 함수처럼 `return` 하는 것만으로도 `Promise` 를 반환한다.
+
+![async/await_예외처리_01](https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7&sz=w600)
+
+그렇다면 `error` 를 반환해야 할 경우는 어떨까? 일반적인 `Promise` 구문은 `reject` 함수를 이용해 에러를 전달한다. 그러나 `async` 는 `throw` (흔히 `throw new Error("...")` 로 만들어 전달한다) 를 반환한다. 자세히보면 둘 다 `Uncaught` 가 되었다. `Uncaught` 구문이 나타났다는 것은 콜스택(호출순서)에서 에러가 난 시점 이후로 코드는 동작하지 않는다는 것을 말한다. 그러나 때때로 에러가 나더라도 이후 시점의 코드가 계속 동작해야할 경우는 어떻게 처리 할까?
+
+![async/await_예외처리_02](https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl&sz=w600)
+
+`.catch()` 를 사용해 에러를 예외처리 하면 가능하다. 더 이상 `Uncaught` 가 나타나지 않으며 제대로 동작한다.
+
+![async/await_예외처리_03](https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo&sz=w600)
+
+`await` 은 `async`, `Promise` 안에서만 설정/동작이 가능하고 비동기 처리 안에서도 처리를 기다려야 할 경우 사용한다. `await` 없이 `wait(3)` 함수 호출은 비동기 처리이기 때문에 바로 다음 `console.log(new Date())` 로 넘어가 출력한다.
+
+![async/await_예외처리_04](https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS&sz=w600)
+
+그러나 `await` 을 적용한 시점에서 부터는 3초 기다리고 다음 `console.log(new Date())` 가 출력된다.
+
+![async/await_예외처리_05](https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT&sz=w600)
+
+![async/await_예외처리_06](https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R&sz=w600)
+
+이제 `async`, `await` 의 예외처리도 `try/catch` 나 `.catch()` 를 사용하지 않으면 `Uncaught` 경고가 나온다.
+
+![async/await_예외처리_07](https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW&sz=w600)
+
+이를 위해 `async` 안에도 `try/catch` 구문이나 `await` 함수에 `.catch()` 를 적용해주면 간단히 해결된다.
+
+![async/await_예외처리_08](https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m&sz=w600)
+
+만약 `const result` 변수를 추가해 반환된 결과가 무엇인지 출력해보면 어떻게 될까?
+
+![async/await_예외처리_09](https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI&sz=w600)
+
+바로 `undefined` 가 출력된다. 이것은 `wait(3)` 함수의 반환결과가 아니다. 뒤로 이어지는 `.catch()` 함수가 `reject` 가 던진 에러를 받고 에러를 출력할 뿐 `return` 한 결과가 없기 때문이다.
+
+----
+
+## #1.37 StartPhoneVerification Resolver part Three: SMS 보내기
+
+이제 실제로 SMS 인증 번호가 보내지는 결과를 보도록 하자. `StartPhoneVerification.resolvers.ts` 에서 인증을 보내는 결과를 볼 수 있도록 `console.log(newVerification)` 출력한다.
+
+#### StartPhoneVerification.resolvers.ts
+```typescript
+import Verification from "../../../entities/Verification";
+import {
+  StartPhoneVerificationMutationArgs,
+  StartPhoneVerificationResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import { sendVerificatoinSMS } from "../../../utils/sendSMS";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    StartPhoneVerification: async (
+      _,
+      args: StartPhoneVerificationMutationArgs,
+    ): Promise<StartPhoneVerificationResponse> => {
+      const { phoneNumber } = args;
+      try {
+        ...
+        const newVerification = await Verification.create({
+          payload: phoneNumber,
+          target: "PHONE",
+        }).save();
+
+        console.log(newVerification); // 실제로 보내는 결과를 출력
+
+        await sendVerificatoinSMS(newVerification.payload, newVerification.key);
+        return {
+          ok: true,
+          error: null,
+        };
+      } catch (error) {
+        ...
+      }
+    },
+  },
+};
+
+export default resolvers;
+```
+
+이제 `http://localhost:4000/playground` 로 접속해서 실제 핸드폰 인증을 보내도록 한다 (주의: PostgresQL 에 접속되있어야 한다).
+
+![Start_Phone_Verification_Result_00](https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI&sz=w720)
+
+![Start_Phone_Verification_Result_01](https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad&sz=w640)
+
+위에서 처럼 `console.log(newVerification)` 의 결과가 출력된 것을 볼 수 있다.
+
+![Start_Phone_Verification_Result_02](https://drive.google.com/uc?id=1MLEnnNoN7iCAkRk4IUtMOFHE6yOR-DsY&sz=w360)
+
+폰에도 SMS 메세지가 온 것을 볼 수 있다.
+
+![Start_Phone_Verification_Result_03](https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P&sz=w720)
+
+Twilio 에서도 SMS 메세지를 보낸 결과가 나타난다.
+
+![Start_Phone_Verification_Result_04](https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR&sz=w720)
+
+----
+
+## #1.38 CompletePhoneVerification
+
+`src/api/User/CompletePhoneVerification/` 디렉토리에 `CompletePhoneVerification.graphql` 과 `CompletePhoneVerification.resolvers.ts` 파일을 생성한다.
+
+#### CompletePhoneVerification.graphql
+```graphql
+type CompletePhoneVerificationResponse {
+  ok: Boolean!
+  error: String
+  token: String
+}
+
+type Mutation {
+  CompletePhoneVerification(
+    phoneNumber: String!
+    key: String!
+  ): CompletePhoneVerificationResponse!
+}
+```
+
+#### CompletePhoneVerification.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import Verification from "../../../entities/Verification";
+import {
+  CompletePhoneVerificationMutationArgs,
+  CompletePhoneVerificationResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    CompletePhoneVerification: async (
+      _,
+      args: CompletePhoneVerificationMutationArgs,
+      ): Promise<CompletePhoneVerificationResponse> => {
+      const { phoneNumber, key } = args;
+      // 인증 완료 여부 확인, 폰 번호, 키 입력 값
+      try {
+        const verification = await Verification.findOne({
+          payload: phoneNumber,
+          key,
+        });
+        if (!verification) {
+          return {
+            ok: false,
+            error: "인증된 키가 확인되지 않습니다.",
+            token: null,
+          };
+        } else {
+          verification.verified = true; // Verification 에는 인증됐다고 남기고
+          verification.save(); // DB 저장
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+
+      try {
+        const user = await User.findOne({ phoneNumber });
+        if (user) {
+          user.verifiedPhoneNumber = true; // User 에는 인증된 폰 번호라고 알려주고
+          user.save(); // DB 저장
+          return {
+            ok: true,
+            error: null,
+            token: "",
+          };
+        } else {
+          // token 을 사용하지 않을 경우
+          return {
+            ok: true,
+            error: null,
+            token: null,
+          };
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+export default resolvers;
+```
+
+`try/catch` 구문이 두개가 존재하는데 첫번째는 인증 여부를 Verification Entity 에서 확인한다. 두번째는 사용자에게도 인증 여부를 알리기 위해 User Entity 에도 폰번호 인증 여부를 저장한다.
+
+`src/api/Verification/shared/Verification.graphql` 에서 `verified: Boolean!` 를 추가해야 한다. 앞서 인증 결과를 저장하기 위해 `verification.verified = true` 를 기억할 것이다. 이것이 여기에 해당한다.
+
+```graphql
+type Verification {
+  id: Int!
+  target: String!
+  payload: String!
+  key: String!
+  verified: Boolean! # 추가된 부분
+  createAt: String!
+  updateAt: String
+}
+```
+
+`src/entities/Verification.ts` 에도 추가된 사항을 적용한다.
+
+```typescript
+@Entity()
+class Verification extends BaseEntity {
+  ...
+
+  @Column({ type: "text" })
+  key: string;
+
+  // 추가된 부분
+  @Column({ type: "boolean", default: false })
+  verified: boolean;
+
+  @CreateDateColumn() createdAt: string;
+
+  @UpdateDateColumn() updatedAt: string;
+
+  ...
+}
+```
+
+----
+
+## #1.40 EmailSignUp Resolver
+
+다음은 이메일 가입과 인증을 다뤄보자. 우선 디렉토리 `src/api/User/EmailSignUp` 를 만든다. `EmailSignUp.graphql`, `EmailSignUp.resolvers.ts` 파일들을 만든다.
+
+#### EmailSignUp.graphql
+```graphql
+type EmailSignUpResponse {
+  ok: Boolean!
+  error: String
+  token: String
+}
+
+type Mutation {
+  EmailSignUp(
+    firstName: String!
+    lastName: String!
+    email: String!
+    password: String!
+    profilePhoto: String!
+    age: Int!
+    phoneNumber: String!
+  ): EmailSignUpResponse!
+}
+```
+
+#### EmailSignUp.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import {
+  EmailSignUpMutationArgs,
+  EmailSignUpResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    EmailSignUp: async (
+      _,
+      args: EmailSignUpMutationArgs,
+    ): Promise<EmailSignUpResponse> => {
+      const { email } = args;
+      // 기존에 있는 사용자는 가입이 아니라 로그인
+      try {
+        const existingUser = await User.findOne({ email });
+        // console.log("Email 기존 가입자: ", existingUser);
+        if (existingUser) {
+          return {
+            ok: false,
+            error: "이미 가입된 사용자, 대신 로그인 합니다.",
+            token: null,
+          };
+        } else {
+          const newUser = await User.create({ ...args }).save();
+          // console.log("Email 새로운 가입자: ", newUser);
+          return {
+            ok: true,
+            error: null,
+            token : "",
+          };
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+export default resolvers;
+```
+
+- 이메일 가입은 `email` 로 사용자 존재 여부를 찾는다.(Facebook 가입은 `fbID` 로 찾았다) 기존 사용자가 있다면 바로 로그인 하고 아니면 새 가입자를 만들기 위해 `User.create()` 한다.
+- 새 가입자는 `{ ...args }` 인자를 적용해 추가한다. 이렇게 하는 이유는 User Scheme 중에 `EmailSignUpMutationArgs` 에 정의된 Entity (`firstName`, `lastName`, `email`, `password`, `profilePhoto`, `age`, `phoneNumber`) 모두를 추가/업데이트 하기 위해서다.
+
+----
 
 ## #1.41 사용자 JWT 생성
 이제 사용자를 인증하는 방식인 JWT(JSON Web Token)을 다룰 것이다. 우선 다음 모듈을 설치한다.
@@ -666,13 +1150,13 @@ $ yarn add @types/jsonwebtoken --dev
 
 그리고 다음은 `src/utils/createJWT.ts` 을 만든다.
 
-> NOTE:
+> **NOTE:**
 > 
-> **JWT (JSON Web Token)** <br>
+> ### JWT (JSON Web Token)
 > 웹표준(RFC7519)으로서 두 개체에서 JSON 객체를 사용하여 가볍고 자가수용적인(self-contained) 방식으로 정보를 안전성 있게 전달해준다. JWT는 서버와 클라이언트 간 정보를 주고 받을 때 HTTP Request Header에 JSON 토큰을 넣은 후 서버는 별도의 인증 과정없이 헤더에 포함되어 있는 JWT 정보를 통해 인증한다. 이때 사용되는 JSON 데이터는 URL-Safe 하도록 URL에 포함할 수 있는 문자만으로 만들게 된다. JWT는 HMAC 알고리즘을 사용하여 비밀키 또는 RSA를 이용한 `Public Key/Private Key` 쌍으로 서명할 수 있다. 여기서 `Private Key` 나 `SECRET KEY` 는 같은 개념이다.
 > 
-> **Token?** <br>
-> 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰을 서버로 부터 받음으로써 접근 권한을 부여 받는다. <br>
+> ### Token?
+> 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰은 서버로부터 접근 권한을 부여 받는다. <br>
 > 
 > ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
 > https://jwt.io/
@@ -701,7 +1185,7 @@ $ yarn add @types/jsonwebtoken --dev
 **참고:** 
 https://velopert.com/2350, https://tansfil.tistory.com/58
 
-`createJWT.ts` 에서 구현할 과정은 사용자의 고유 ID 를 받으면 JWT 를 생성하는 일이다 (이미지 3, 4번 과정).
+`createJWT.ts` 에서 구현할 과정은 사용자의 고유 ID 를 받으면 JWT 를 생성하는 일이다 (이미지 3번 과정).
 
 ```typescript
 import jwt from "jsonwebtoken";
@@ -714,6 +1198,460 @@ const createJWT = (id: number): string => {
 export default createJWT;
 ```
 
-- `jsonwebtoken` 모듈을 불러오기 하고 `createJWT` 함수를 생성한다. `number` 타입의 `id` 를 매개변수로 받고 반환할 `token` 은 `string` 타입이 될 것이다.
+- `jsonwebtoken` 모듈을 불러오기 하고 `createJWT` 함수를 만든다. `number` 타입의 `id` 를 매개변수로 받고 반환할 `token` 은 `string` 타입이 될 것이다.
 - 이제 `token` 을 만드는데 우선 두개의 인자가 필요하다. 첫번째는 `id`, 두번째는 `Private Key(SECRET KEY)` 를 생성해주는 양식이다.
 - 두번째 인자는 중요하기 때문에 `.env` 환경변수에 저장해 가져오도록 한다. https://passwordsgenerator.net/ 에 접속해 `Private Key(SECRET KEY)`를 생성해주는 옵션들을 선택하고 Generate Password 버튼을 클릭, 양식을 복사한다. 복사한 양식을 `.env` 파일에 `JWT_TOKEN=` 에 붙여넣기 한다. 그리고 `process.env.JWT_TOKEN` 으로 가져온다.
+
+----
+
+## # 1.42 Custom JWT로 사용자 인증
+
+JWT 진행과정에서 실제로 Token 발급을 하고 Client 측으로 전달하는 부분을 적용시켜보자. 우선 `src/api/User/FacebookConnect/FacebookConnet.resolvers.ts` 로 다시 돌아가서 다음 `createJWT` 함수를 추가한다.
+
+#### FacebookConnet.resolvers.ts
+```typescript
+...
+
+import createJWT from "../../../utils/createJWT"; // createJWT 모듈 불러오기
+
+const resolvers: Resolvers = {
+  Query: {
+    ...
+  },
+  Mutation: {
+    FacebookConnect: async (
+      _,
+      args: FacebookConnectMutationArgs,
+    ): Promise<FacebookConnectResponse> => {
+      const { fbID } = args;
+      try {
+        // 먼저 Facebook ID 가 이미 존재하는지 확인
+        const existingUser = await User.findOne({ fbID });
+        // console.log("Facebook 기존 사용자: ", existingUser);
+        // 이미 로그인한 사용자가 있다면
+        if (existingUser) {
+          const token = createJWT(existingUser.id); // #1. JWT Token 추가
+          return {
+            ok: true,
+            error: null,
+            token,
+          };
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+
+      try {
+        // 새로운 사용자를 생성하고 데이터베이스 저장/업데이트
+        const newUser = await User.create({
+          ...args,
+          profilePhoto: `http://graph.facebook.com/${fbID}/picture?type=square`,
+        }).save();
+        // console.log("Facebook 새로운 사용자: ", newUser);
+        const token = createJWT(newUser.id); // #2. JWT Token 추가
+        return {
+          ok: true,
+          error: null,
+          token,
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+...
+```
+
+`FacebookConnect.resolvers.ts` 에서 두 개의 `createJWT` 함수를 만들었는데 둘다 사용자 로그인 정보인 `{fbID}` 를 이용해 DB 회원정보를 `User.findOne({ fbID })` 통해 찾고, 있다면 사용자 ID 로 Token 을 생성하고 결과를 포함시켜 Client 에 응답으로 보낸다.
+
+다음은 `EmailSignUp.resovlers.ts` 에도 새로운 가입자 일때 Token 을 통해 응답하도록 설정한다.
+
+#### EmailSignUp.resolvers.ts
+```typescript
+...
+
+import createJWT from "../../../utils/createJWT";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    EmailSignUp: async (
+      _,
+      args: EmailSignUpMutationArgs,
+    ): Promise<EmailSignUpResponse> => {
+      const { email } = args;
+      // 기존에 있는 사용자는 가입이 아니라 로그인
+      try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return {
+            ok: false,
+            error: "이미 가입된 사용자, 대신 로그인 합니다.",
+            token: null,
+          };
+        } else {
+          const newUser = await User.create({ ...args }).save();
+          const token = createJWT(newUser.id); // # JWT Token 추가
+          return {
+            ok: true,
+            error: null,
+            token,
+          };
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+...
+```
+
+그리고 `CompletePhoneVerification.resolvers.ts` 에도 폰인증이 완료되었다는 응답을 해줘야할 부분에 Token 을 추가한다.
+
+#### CompletePhoneVerification.resolvers.ts
+```typescript
+...
+
+import createJWT from "../../../utils/createJWT";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    CompletePhoneVerification: async (
+      _,
+      args: CompletePhoneVerificationMutationArgs,
+      ): Promise<CompletePhoneVerificationResponse> => {
+      const { phoneNumber, key } = args;
+      
+      try {
+        ...
+      } catch (error) {
+        ...
+      }
+
+      try {
+        const user = await User.findOne({ phoneNumber });
+        if (user) {
+          user.verifiedPhoneNumber = true;
+          user.save();
+          // # JWT Token 추가
+          const token = createJWT(user.id);
+          return {
+            ok: true,
+            error: null,
+            token,
+          };
+        } else {
+          return {
+            ok: true,
+            error: null,
+            token: null,
+          };
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+...
+```
+
+여기까지가 사용자가 가입을 하고 가입정보를 이용해 회원 DB에서 회원 여부를 찾고, 없으면 새로운 가입자로 저장하며 결과를 Token 발급을 통해 전달한다. 가입정보 확인이나 휴대폰 인증 완료 또한 이전에 발급 받았던 Token 으로 검증된다.
+
+---
+
+## #1.43 Testing Authentication Resolvers
+
+#### Facebook 접속 인증 테스트
+![Facebook 접속 인증 테스트](https://drive.google.com/uc?id=1fJjj6JDWUgRcuWV6tNPS2qJ0mzq3Fsmh&sz=w720)
+
+#### 핸드폰 인증 테스트
+![핸드폰 인증 테스트](https://drive.google.com/uc?id=1IdHo7tjb_v66j321OMLz-BxlEtA_bNDl&sz=w720)
+
+#### 이메일 가입 인증 테스트
+![이메일 가입 인증 테스트](https://drive.google.com/uc?id=12Umrkq3sica7wkDqIC0cAF26mJWMrclj&sz=w720)
+
+이메일 가입여부를 PostgresQL 에서 사용자의 DB 리스트가 생성된 것을 볼 수 있다.
+
+![PostgresQL DB Search](https://drive.google.com/uc?id=1HvaAE53ATtttILHBTIccSolDJvtuHQiZ&sz=w720)
+
+
+테스트는 `EmailSignUp`, `EmailSignIn`, `FacebookConnect` 순으로 하는 것이 좋다. 왜일까?
+`FacebookConnect` 을 먼저하고 `EmailSignUp` 하면 비밀번호 업데이트는 안된 상태기 때문에 `null` 이 된다. `EmailSignUp` 은 단지 `email` 로 사용자 여부를 찾기 때문에 비밀번호 업데이트 없는 `if(exsitingUser)` 로 넘어간다.
+
+그 다음 `EmailSignIn` 에서 비밀번호를 넣어도 추가된 비밀번호가 없기 때문에 비교 대상인 hash 된 비밀번호가 필요하다고 나온다. `"Error: data and hash arguments required"`  반대로 `EmailSignUp` 을 하고 `FacebookConnet` 하면 어떻게 될까? 이것은 서로 다른 고유 `id` 식별자로 생성된다.
+
+이것은 현재까지 테스트 차원에서 확인해보는 것이고 아직 제대로된 코드가 아니라는 것을 참고한다.
+
+----
+
+## #1.44 Custom Auth Middleware on Express
+
+반대로 Client 측에서 Server 측으로 JWT 를 받아 열어볼 때는 어떻게 해야 할까? 아주 간단하다. `src/app.ts` 파일에 JWT 를 받으면 열어보는 Middleware 를 만들면 된다.
+
+우선 JWT 복호화 해줄 모듈이 필요하다. 그 모듈을 `src/utils/decodeJWT.ts` 로 한다.
+
+#### decodeJWT.ts
+```typescript
+import jwt from "jsonwebtoken";
+import User from "../entities/User";
+
+// Custom Middleware, 사용자(Client) 측에서 받은 token 을 복호화, 반환은 DB 사용자 정보거나 없을 수 있다.
+const decodeJWT = async (token: string): Promise<User | undefined> => {
+  try {
+    // Private Key 로 Token 을 복호화해 인증한다.
+    const decoded: any = jwt.verify(token, process.env.JWT_TOKEN || "");
+    const { id } = decoded;
+    const user = await User.findOne({ id });
+    return user;
+  } catch (error) {
+    return undefined;
+  }
+};
+
+export default decodeJWT;
+```
+
+- Custom Middleware 인 `decodeJWT` 는 사용자(Client) 측에서 받은 Token 을 복호화 한다. 반환은 DB 사용자 정보거나 없을 수 있다.
+- `jsonwebtoken` 모듈을 불러와 `jwt.verify()` 함수를 이용해 인자로 받은 Token 을 환경변수에 저장한 `Private Key` 로 복호화 한다.
+- 복호화된 정보에서 사용자 ID 를 받아 사용자 여부를 조회한다.
+
+#### app.ts
+```typescript
+...
+
+import decodeJWT from "./utils/decodeJWT"; // #1. JWT 복호화 모듈 불러오기
+
+class App {
+  public app: GraphQLServer;
+  constructor() {
+    this.app = new GraphQLServer({
+      schema,
+      // #4. 요청이 들어올 시 전달할 Context, 모든 Resolver 에서 사용가능
+      context: req => {
+        return {
+          req: req.request,
+        };
+      },
+    });
+    this.middlewares();
+  }
+  private middlewares = (): void => {
+    this.app.express.use(cors());
+    this.app.express.use(logger("dev"));
+    this.app.express.use(helmet());
+    this.app.express.use(this.jwt); // #2. JWT 복호화 Middleware 를 연결한다.
+  };
+
+  // #3. Client 로 부터 받은 JWT_TOKEN 을 복호화
+  private jwt = async (
+    req,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    // 들어온 Token 중에 해당 HTTP Header 가 있는지 조회(Header 이름은 아무거나 상관없다.)
+    const token = req.get("X-JWT");
+    if (token) {
+      const user = await decodeJWT(token);
+      if (user) {
+        req.user = user;
+      } else {
+        req.user = undefined;
+      }
+    }
+    next();
+  };
+}
+
+...
+```
+
+- ID 를 갖고 암호화시켰기 때문에 복호화도 ID 로 해야 한다. `private` 함수인 `jwt` 를 만들고 `"X-JWT"` 헤더를 가진 Token 을 조회한다. 가져온 Token 을 복호화하고 사용자가 누군지 반환 받는다.
+- 복호화 후 `req.user = user` 를 한 이유는 `req` 라는 객체에 `user` 정보를 넣음으로써 모든 요청은 Middleware 를 거치면서 어디든 `user` 정보를 전달할 수 있게 함이다. 결국 `req.user` 정보는 `new GraphQLServer({ ... }`) 로 들어가게 되면서 `context` 를 통해 GraphQL 의 모든 Resolver 는 이 정보를 사용할 수 있게 된다.
+
+----
+
+## #1.47 GetMyProfile Resolver
+
+이제 GraphQLServer 에서 `context` 를 통해 어떤 Resolver 든 사용자의 정보를 활용할 수 있게 되었다. 그러나 한가지 문제점은 어떻게 사용자 정보를 보호 하느냐다. 다음은 **Currying** 기법을 사용해 사용자 정보를 보호하고 프로파일을 불러오는 방법이다.
+
+> **NOTE:**
+> 
+> ### **Currying?**
+> 
+> 특정 함수에 정의된 인자를 가져와서 다른 함수의 인자와 합쳐 전혀 새로운 프로세스를 만드는 것을 말한다. 단순하게 말해서 특정 조건의 인자들이 충족되고 모이면 한꺼번에 실행된 결과를 받는 것이다. 
+> 
+> ```javascript
+> const notCurry = (x, y, z) => x + y + z; // a regular function
+> const curry = x => y => z => x + y + z; // a curry function
+> ```
+> 
+> 예를들어 `curry(1)` 를 호출하면 `y => z => 1 + y + z` 가 반환된다. `curry(1)(2)` 를 호출한다고 하면 `z => 1 + 2 + z` 가 반환된다. 다시 이런식으로 반환된 함수에 마지막 인자를 보내 `curry(1)(2)(3)` 처럼 호출한다면 최종적으로 `1 + 2 + 3` 의 결과가 되는 것이다.
+> 
+
+우선 `src/api/User/GetMyProfile` 디렉토리에 `GetMyProfile.graphql`, `GetMyProfile.resolvers.ts` 파일을 생성한다.
+
+#### GetMyProfile.graphql
+```graphql
+type GetMyProfileResponse {
+	ok: Boolean!
+	error: String
+	user: User
+}
+
+type Query {
+	GetMyProfile: GetMyProfileResponse!
+}
+```
+
+#### GetMyProfile.resolvers.ts
+```typescript
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+// privateResolver 호출은 GetMyProfile: async (parent, args, context) => {...} 처럼 된다.
+const resolvers: Resolvers = {
+  Query: {
+    GetMyProfile: privateResolver(async (_, __, { req }) => {
+      const { user } = req;
+      return {
+        ok: true,
+        error: null,
+        user,
+      };
+    }),
+  },
+};
+
+export default resolvers;
+```
+
+- `GetMyProfile` 메소드에서 매개변수인 `{ req }` 로 `context.req` 를 바로 가져온다.
+- `const { user } = req;` 는 `context.req.user` 로서 사용자 정보를 담는다.
+- 자세히보면 `privateResolver` 함수로 감싸 호출한 것을 볼 수 있다. 이것은 Resolver 를 보호하는 역할을 한다.
+
+`src/utils/privateResolver.ts` 의 코드는 다음과 같다.
+
+#### privateResolver.ts
+```typescript
+// privateResolver 를 호출하는 쪽에선 resolver 함수를 필요시에 호출이 가능하도록 설정만 할 것이다.
+const privateResolver = resolverFunction => async (parent, args, context, info) => {
+  // context 요청에 user 가 없다면 에러
+  if (!context.req.user) {
+    throw new Error("JWT 가 없습니다. 처리 과정에서 거부되었습니다.");
+  }
+  const resolved = await resolverFunction(parent, args, context, info);
+  return resolved;
+};
+
+export default privateResolver;
+```
+
+앞서 설명한 Currying 기법을 사용해 `resolverFuntion` 라는 함수 인자와 `parent`, `args`, `context`, `info` 를 차례대로 받는다. 결국 이 인자들은 `resolverFuncion(parent, args, context, info)` 호출로 구성되어 만난다.
+
+그렇다면 `GetMyProfile.resolvers.ts` 에서 `GetMyProfile` 호출은 다음과 같은 결과를 가지게 된다.
+
+```typescript
+...
+
+GetMyProfile: async (parent, args, context, info) => {
+  if (!context.req.user) {
+    throw new Error("JWT 가 없습니다. 처리 과정에서 거부되었습니다.");
+  }
+  const resolved = async (_, __, { req }) => {
+    const { user } = req;
+    return {
+      ok: true,
+      error: null,
+      user,
+    };
+  };
+  return resolved;
+}
+
+...
+```
+
+결국 `resolverFunction` 인자로 보낸 익명 함수는 사용자 Currying 에 맞게 설정만 되는 것이고 실제로 `GetMyProfile` 이 호출되어야 `resolved` 결과를 반환 받는 것이다. Playground 테스트 결과 잘 동작한다.
+
+![GetMyProfile Test](https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt&sz=w720)
+
+현재까지 우리가 작업한 리스트를 보도록하자.
+
+## Resolver 작업 리스트
+
+### Public Resolver
+- [x] 로그인 / Facebook(SNS) 가입
+- [x] 이메일 가입
+- [x] 이메일 로그인
+- [x] 핸드폰 번호 인증 시작
+- [x] 핸드폰 번호 인증 완료
+
+### Authentication
+- [x] JWT 생성
+- [x] JWT 인증
+
+### Private Resolver
+- [ ] 이메일 인증
+- [x] 프로파일 조회
+- [ ] 프로파일 변경
+- [ ] 운전 모드 변환
+- [ ] 지역 / 위치 분석
+- [ ] 장소 추가
+- [ ] 장소 수정
+- [ ] 장소 삭제
+- [ ] 주변 운전자 찾기
+- [ ] 주변 운전자 예약
+- [ ] 탑승 요청
+- [ ] 주변 탑승자 조회
+- [ ] 주변 탑승자 예약
+- [ ] 주변 탑승자 찾기 요청
+- [ ] 예약된 주변 탑승자 요청
+- [ ] 예약된 탑승 상태
+- [ ] 채팅방 메세지 얻기
+- [ ] 채팅방 메세지 승인
+- [ ] 채팅 메세지 전달
+
+`GetMyProfile` 로 프로파일 조회는 완료 되었다. 이전에 `EmailSignUp` 을 했지만 이메일을 Verify 하지는 않았다.
+
+## #1.49 Sending Confirmation Email
+
+이전에 SMS 인증을 위해 Twilio RESTful Service 이용했다. 이메일 인증 또한 서비스를 이용할 것이다. [mailgun](https://www.mailgun.com) 사이트를 방문해 가입한다.
+
+가입이 완료되고 난 후 Sandbox Domain, API 키가 필요하다.
+
+
+현재는 Trial 가입 상태이기 때문에 이메일을 보내는 정도로만 가능하다.
+
+
+환경변수 `.env` 에 `MAILGUN_API_KEY` 라는 변수로 Private API 키를 등록한다. 이제 `mailgun` 모듈을 설치한다.
+
+```bash
+$ yarn add mailgun-js && yarn add @types/mailgun-js --dev
+```
+
+그리고 `src/utils/sendEmail.ts` 파일을 만든다.
+
+```typesript
+
+```

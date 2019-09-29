@@ -6,7 +6,7 @@ import helmet from "helmet";
 import logger from "morgan";
 // .graphql 과 resolver.ts 를 모두 합친 schema.ts 를 불러온다.
 import schema from "./schema";
-import decodeJWT from "./utils/decodeJWT";
+import decodeJWT from "./utils/decodeJWT"; // JWT 복호화 모듈 불러오기
 
 class App {
 	public app: GraphQLServer;
@@ -29,7 +29,7 @@ class App {
 		this.app.express.use(cors());
 		this.app.express.use(logger("dev"));
 		this.app.express.use(helmet());
-		this.app.express.use(this.jwt);
+		this.app.express.use(this.jwt); // JWT 복호화 Middleware 를 연결한다.
 	};
 
 	// Client 로 부터 받은 JWT_TOKEN 을 복호화
@@ -38,6 +38,7 @@ class App {
 		res: Response,
 		next: NextFunction,
 	): Promise<void> => {
+		// 들어온 Token 중에 해당 HTTP Header 가 있는지 조회(Header 이름은 아무거나 상관없다.)
 		const token = req.get("X-JWT");
 		if (token) {
 			const user = await decodeJWT(token);

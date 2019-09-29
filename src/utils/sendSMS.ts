@@ -5,7 +5,7 @@ import Twilio from "twilio";
 const twilioClient = Twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 // SMS 인증 번호를 생성하는 부분
-export const sendSMS = (to: string, body: string) => {
+const sendSMS = (to: string, body: string) => {
 	// client 에게 message 를 새로 create(생성) 해서 보낸다.
 	return twilioClient.messages.create({
 		body, // body 가 인증번호일 것이다.
