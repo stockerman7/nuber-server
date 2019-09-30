@@ -615,8 +615,9 @@ src
 - [ ] JWT 인증
 
 ### Private Resolver
-- [ ] 이메일 인증
 - [ ] 프로파일 조회
+- [ ] 이메일 인증 요청
+- [ ] 이메일 인증 완료
 - [ ] 프로파일 변경
 - [ ] 운전 모드 변환
 - [ ] 지역 / 위치 분석
@@ -653,29 +654,29 @@ Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful 
 > 
 > 여기서 **자원의 표현**이라는 말은 인터넷 프로토콜인 HTTP URI(Uniform Resource Identifier)를 말한다.
 > 
-> 그렇다면 **상태를 전달**한다는 것은 무슨 말일까? 이것은 데이터가 요청되는 시점의 자원의 상태를 전달을 말하는데 HTTP Method(POST, GET, PUT, DELETE)를 통해 CRUD Operation 한다. 흔히 JSON, XML 을 통해 데이터를 주고 받는다. 웹의 장점을 최대한 활용하는 아키텍처 스타일이다.
+> 그렇다면 **상태를 전달**한다는 것은 무슨 말일까? 이것은 데이터가 요청되는 시점의 자원의 상태 전달을 말한다. HTTP Method(POST, GET, PUT, DELETE)를 통해 CRUD Operation 한다. 흔히 JSON, XML 을 통해 데이터를 주고 받는다. 웹의 장점을 최대한 활용하는 아키텍처 스타일이다.
 
-![Twilio Buy](https://lh3.googleusercontent.com/mpHlAu7w2d_qtctdN2euJNLZsS9NrZhI8MTZ6LfD37HGdKQOzeYEVK_3OgQeswokZhbTzLte8sibHNbrq7rnxKTI4Mw4ubvv0e1KqL6mLKRtPlAAPxJgoOU0PjfJo-QQ-JXMmKaAog=w720)
+![Twilio Buy](https://lh3.googleusercontent.com/mpHlAu7w2d_qtctdN2euJNLZsS9NrZhI8MTZ6LfD37HGdKQOzeYEVK_3OgQeswokZhbTzLte8sibHNbrq7rnxKTI4Mw4ubvv0e1KqL6mLKRtPlAAPxJgoOU0PjfJo-QQ-JXMmKaAog=w1080)
 
 우측 검색창에 `Buy A Number` 를 검색한다.
 
-![Twilio Phone Number Search](https://lh3.googleusercontent.com/OUeiirKFejhBel0WxrS5_oIp4yVETGYcas3JIbsfmezKM9JeHDhpXnXsAD_56v_GBNZStfI07uU5r3ydIGQj_Z1MGo0HdUr4gcKioBOCnyBLQJW0ndLnB--FAWXDDxM6fipBr3EqFw=w720)
+![Twilio Phone Number Search](https://lh3.googleusercontent.com/OUeiirKFejhBel0WxrS5_oIp4yVETGYcas3JIbsfmezKM9JeHDhpXnXsAD_56v_GBNZStfI07uU5r3ydIGQj_Z1MGo0HdUr4gcKioBOCnyBLQJW0ndLnB--FAWXDDxM6fipBr3EqFw=w1080)
 
 현재 한국전화는 이용에 어려움이 있다. 이용 제한 국가를 제외한 국가를 선택하고 '지역번호'를 아무거나 선택해 검색한다.
 
-![Twilio Availiable Phone Number](https://lh3.googleusercontent.com/gnhPq5xHPi41cR6ZfWKNm1q_AB5lqwsdnjM2li3MQE1hJJrgJcMDFXtCNdr4yQ_Ul_GQv0kNz4Bm4rNM-K7twOWuOOBlZ7gPoqs2tBzUvAKXc7Jr6EIrXhzJ6trBEKQMpk98x93U5Q=w720)
+![Twilio Availiable Phone Number](https://lh3.googleusercontent.com/gnhPq5xHPi41cR6ZfWKNm1q_AB5lqwsdnjM2li3MQE1hJJrgJcMDFXtCNdr4yQ_Ul_GQv0kNz4Bm4rNM-K7twOWuOOBlZ7gPoqs2tBzUvAKXc7Jr6EIrXhzJ6trBEKQMpk98x93U5Q=w1080)
 
 검색으로 나온 리스트는 현재 사용 가능한 번호다. 우측에 `Buy` 버튼을 눌러 구입한다. $1.00 밖에 하지 않기 때문에 무료다.
 
-![Twilio SMS Geographic Permissions](https://lh3.googleusercontent.com/qADA1fgLTUii55DaHNcCm3Ak_R1pFStnNbRUcpufhReb2nTgCTw4hO4NbYYyTMTI7utHxZUgJgmHH39LNwYJEvlQNIlOUBrfAtckVM1Ea_uQuF8bHWKa8JOomZsTUiQPnIsD96feiw=w720)
+![Twilio SMS Geographic Permissions](https://lh3.googleusercontent.com/qADA1fgLTUii55DaHNcCm3Ak_R1pFStnNbRUcpufhReb2nTgCTw4hO4NbYYyTMTI7utHxZUgJgmHH39LNwYJEvlQNIlOUBrfAtckVM1Ea_uQuF8bHWKa8JOomZsTUiQPnIsD96feiw=w1080)
 
 구입을 완료한 후, 이제 검색창에 SMS 로 검색해 `SMS Geographic Permissions` 를 선택한다.
 
-![SMS Geographic Permissions Country](https://lh3.googleusercontent.com/29_Kik-FkG54Hylvy4oJW7Ttkot5OD1Z5wvoUbEpcNnKOamtxC7WSdRHMPrXjtINhAiJRCB_NRFefuO55Yvliylubknpn6t_DnmctR4BrWPx0_OPgAKn_Ot_i4DiSv5XeZf-vUpxpQ=w720)
+![SMS Geographic Permissions Country](https://lh3.googleusercontent.com/29_Kik-FkG54Hylvy4oJW7Ttkot5OD1Z5wvoUbEpcNnKOamtxC7WSdRHMPrXjtINhAiJRCB_NRFefuO55Yvliylubknpn6t_DnmctR4BrWPx0_OPgAKn_Ot_i4DiSv5XeZf-vUpxpQ=w1080)
 
 메세지를 보낼 대상 국가를 선택하는 화면이 나타난다. 한국으로 SMS 를 전달할 것이기 때문에 Korea 로 선택한다.
 
-![SMS Geographic Premissions Country Selected](https://lh3.googleusercontent.com/5YLGjjRzlsryDn2-YG5C0CDkzfz3yuPw-pJOVlVPVyZLGTl0nqYzbigjR2cmxNmDKPj-dPe1jc-8q3ETNjd4Rnw1SmVA-xnxmLbuWllTMxiAAU9fi1iZzqF8MluMCFXfC9jWB81q7A=w720)
+![SMS Geographic Premissions Country Selected](https://lh3.googleusercontent.com/5YLGjjRzlsryDn2-YG5C0CDkzfz3yuPw-pJOVlVPVyZLGTl0nqYzbigjR2cmxNmDKPj-dPe1jc-8q3ETNjd4Rnw1SmVA-xnxmLbuWllTMxiAAU9fi1iZzqF8MluMCFXfC9jWB81q7A=w1080)
 
 <image src="https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK" alt="Build with Programmable SMS" width="720">
 
@@ -817,41 +818,41 @@ export const sendVerificatoinSMS = (to: string, key: string) => {
 
 `async/await` 은 좀 더 간편하게 비동기 처리를 구현할 수 있도록 ES7에서 도입되었다. `new Promise()` 를 다른 함수로 감싸고 `return` 하지 않고 함수 앞에 `async` 를 넣는 것 만으로도 비동기 처리가 가능하다.
 
-<image src="https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf" alt="async/await_예외처리_00" width="720">
+<image src="https://drive.google.com/uc?id=1rOKQYTgr_pU9xflOW4vzB9S9I_pPrUGf" alt="async/await_예외처리_00" width="960">
 
 함수 하나는 `Promise` 를 반환하는 함수이고 다른 하나는 `async` 를 함수 앞에 붙여 구현한 것이다. 둘다 똑같이 `Promise` 객체를 반환한다. 특히 `async` 는 일반 함수처럼 `return` 하는 것만으로도 `Promise` 를 반환한다.
 
-<image src="https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7" alt="async/await_예외처리_01" width="720">
+<image src="https://drive.google.com/uc?id=1o206xtT-GKmQ1rjb5MvGUpRM-MYbIYe7" alt="async/await_예외처리_01" width="960">
 
 그렇다면 `error` 를 반환해야 할 경우는 어떨까? 일반적인 `Promise` 구문은 `reject` 함수를 이용해 에러를 전달한다. 그러나 `async` 는 `throw` (흔히 `throw new Error("...")` 로 만들어 전달한다) 를 반환한다. 자세히보면 둘 다 `Uncaught` 가 되었다. `Uncaught` 구문이 나타났다는 것은 콜스택(호출순서)에서 에러가 난 시점 이후로 코드는 동작하지 않는다는 것을 말한다. 그러나 때때로 에러가 나더라도 이후 시점의 코드가 계속 동작해야할 경우는 어떻게 처리 할까?
 
-<image src="https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl" alt="async/await_예외처리_02" width="720">
+<image src="https://drive.google.com/uc?id=1ljN5cdGGCfmqAJIiMY-NAnbiGaNPqgkl" alt="async/await_예외처리_02" width="960">
 
 `.catch()` 를 사용해 에러를 예외처리 하면 가능하다. 더 이상 `Uncaught` 가 나타나지 않으며 제대로 동작한다.
 
-<image src="https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo" alt="async/await_예외처리_03" width="720">
+<image src="https://drive.google.com/uc?id=1oPc1fbqCB9QVuYTvlyeqYzs9KejENvdo" alt="async/await_예외처리_03" width="960">
 
 `await` 은 `async`, `Promise` 안에서만 설정/동작이 가능하고 비동기 처리 안에서도 처리를 기다려야 할 경우 사용한다. `await` 없이 `wait(3)` 함수 호출은 비동기 처리이기 때문에 바로 다음 `console.log(new Date())` 로 넘어가 출력한다.
 
-<image src="https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS" alt="async/await_예외처리_04" width="720">
+<image src="https://drive.google.com/uc?id=1bqCoiJKkXEaU41qJsfRPZRd_S1zytxiS" alt="async/await_예외처리_04" width="960">
 
 그러나 `await` 을 적용한 시점에서 부터는 3초 기다리고 다음 `console.log(new Date())` 가 출력된다.
 
-<image src="https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT" alt="async/await_예외처리_05" width="720">
+<image src="https://drive.google.com/uc?id=1i2qTwCTUUe7_eoHMqMXPhROaBCVJUBFT" alt="async/await_예외처리_05" width="960">
 
-<image src="https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R" alt="async/await_예외처리_06" width="720">
+<image src="https://drive.google.com/uc?id=1VrGXdUylX8YmSLlVjWZDmdH21UMJr2-R" alt="async/await_예외처리_06" width="960">
 
 이제 `async`, `await` 의 예외처리도 `try/catch` 나 `.catch()` 를 사용하지 않으면 `Uncaught` 경고가 나온다.
 
-<image src="https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW" alt="async/await_예외처리_07" width="720">
+<image src="https://drive.google.com/uc?id=1oIC6JlJfpr-cJkv7kVtN6za60Ya4tmfW" alt="async/await_예외처리_07" width="960">
 
 이를 위해 `async` 안에도 `try/catch` 구문이나 `await` 함수에 `.catch()` 를 적용해주면 간단히 해결된다.
 
-<image src="https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m" alt="async/await_예외처리_08" width="720">
+<image src="https://drive.google.com/uc?id=1SR5oqi6skVNSjL35gxfBT1mvA9hky99m" alt="async/await_예외처리_08" width="960">
 
 만약 `const result` 변수를 추가해 반환된 결과가 무엇인지 출력해보면 어떻게 될까?
 
-<image src="https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI" alt="async/await_예외처리_09" width="720">
+<image src="https://drive.google.com/uc?id=1lYsQwKsPw3kkswwqwcy9lxJt1BSFGaOI" alt="async/await_예외처리_09" width="960">
 
 바로 `undefined` 가 출력된다. 이것은 `wait(3)` 함수의 반환결과가 아니다. 뒤로 이어지는 `.catch()` 함수가 `reject` 가 던진 에러를 받고 에러를 출력할 뿐 `return` 한 결과가 없기 때문이다.
 
@@ -904,7 +905,7 @@ export default resolvers;
 
 이제 `http://localhost:4000/playground` 로 접속해서 실제 핸드폰 인증을 보내도록 한다 (주의: PostgresQL 에 접속되있어야 한다).
 
-<image src="https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI" alt="Start_Phone_Verification_Result_00" width="720">
+<image src="https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI" alt="Start_Phone_Verification_Result_00" width="960">
 
 <image src="https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad" alt="Start_Phone_Verification_Result_01" width="720">
 
@@ -914,11 +915,11 @@ export default resolvers;
 
 폰에도 SMS 메세지가 온 것을 볼 수 있다.
 
-<image src="https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P" alt="Start_Phone_Verification_Result_03" width="720">
+<image src="https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P" alt="Start_Phone_Verification_Result_03" width="960">
 
 Twilio 에서도 SMS 메세지를 보낸 결과가 나타난다.
 
-<image src="https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR" alt="Start_Phone_Verification_Result_04" width="720">
+<image src="https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR" alt="Start_Phone_Verification_Result_04" width="960">
 
 ----
 
@@ -1158,7 +1159,7 @@ $ yarn add @types/jsonwebtoken --dev
 > ### Token?
 > 여러 단말기들에 접근을 제어하기 위한 매체이다. 다른 말로 Media Access Control(매체 접근 제어)이라고 한다. 제어 토큰은 서버로부터 접근 권한을 부여 받는다. <br>
 > 
-> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w720)
+> ![JWT Example](https://lh3.googleusercontent.com/g4u0d-9a5ynDLg9C7f-pp7xlwbG-Ny1GWKsAmUegz-yv9oYsTWXB7Yx_Q6nj1s-__wQISLdtT8btsLDZGNmaGyS09Jc4LqQtiIx_nCnrQOE0-nIlZqWflp7-KfPjP3Jlsm2msVfV2Q=w1080)
 > 
 > https://jwt.io/
 >
@@ -1273,7 +1274,7 @@ const resolvers: Resolvers = {
 ...
 ```
 
-`FacebookConnect.resolvers.ts` 에서 두 개의 `createJWT` 함수를 만들었는데 둘다 사용자 로그인 정보인 `{fbID}` 를 이용해 DB 회원정보를 `User.findOne({ fbID })` 통해 찾고, 있다면 사용자 ID 로 Token 을 생성하고 결과를 포함시켜 Client 에 응답으로 보낸다.
+`FacebookConnect.resolvers.ts` 에서 두 개의 `createJWT` 함수를 만들었는데 둘다 사용자 로그인 정보인 `fbID` 를 이용해 DB 회원정보를 `User.findOne({ fbID })` 통해 찾고, 있다면 사용자 ID 로 Token 을 생성하고 결과를 포함시켜 Client 에 응답으로 보낸다.
 
 다음은 `EmailSignUp.resovlers.ts` 에도 새로운 가입자 일때 Token 을 통해 응답하도록 설정한다.
 
@@ -1384,17 +1385,17 @@ const resolvers: Resolvers = {
 ## #1.43 Testing Authentication Resolvers
 
 #### Facebook 접속 인증 테스트
-<image src="https://drive.google.com/uc?id=1fJjj6JDWUgRcuWV6tNPS2qJ0mzq3Fsmh" alt="Facebook 접속 인증 테스트" width="720">
+<image src="https://drive.google.com/uc?id=1fJjj6JDWUgRcuWV6tNPS2qJ0mzq3Fsmh" alt="Facebook 접속 인증 테스트" width="960">
 
 #### 핸드폰 인증 테스트
-<image src="https://drive.google.com/uc?id=1IdHo7tjb_v66j321OMLz-BxlEtA_bNDl" alt="핸드폰 인증 테스트" width="720">
+<image src="https://drive.google.com/uc?id=1IdHo7tjb_v66j321OMLz-BxlEtA_bNDl" alt="핸드폰 인증 테스트" width="960">
 
 #### 이메일 가입 인증 테스트
-<image src="https://drive.google.com/uc?id=12Umrkq3sica7wkDqIC0cAF26mJWMrclj" alt="이메일 가입 인증 테스트" width="720">
+<image src="https://drive.google.com/uc?id=12Umrkq3sica7wkDqIC0cAF26mJWMrclj" alt="이메일 가입 인증 테스트" width="960">
 
 이메일 가입여부를 PostgresQL 에서 사용자의 DB 리스트가 생성된 것을 볼 수 있다.
 
-<image src="https://drive.google.com/uc?id=1HvaAE53ATtttILHBTIccSolDJvtuHQiZ" alt="PostgresQL DB Search" width="720">
+<image src="https://drive.google.com/uc?id=1HvaAE53ATtttILHBTIccSolDJvtuHQiZ" alt="PostgresQL DB Search" width="960">
 
 
 테스트는 `EmailSignUp`, `EmailSignIn`, `FacebookConnect` 순으로 하는 것이 좋다. 왜일까?
@@ -1597,42 +1598,7 @@ GetMyProfile: async (parent, args, context, info) => {
 
 <image src="https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt" alt="GetMyProfile Test" width="720">
 
-현재까지 우리가 작업한 리스트를 보도록하자.
-
-## Resolver 작업 리스트
-
-### Public Resolver
-- [x] 로그인 / Facebook(SNS) 가입
-- [x] 이메일 가입
-- [x] 이메일 로그인
-- [x] 핸드폰 번호 인증 시작
-- [x] 핸드폰 번호 인증 완료
-
-### Authentication
-- [x] JWT 생성
-- [x] JWT 인증
-
-### Private Resolver
-- [x] 프로파일 조회
-- [ ] 이메일 인증 요청
-- [ ] 이메일 인증 완료
-- [ ] 프로파일 변경
-- [ ] 운전 모드 변환
-- [ ] 지역 / 위치 분석
-- [ ] 장소 추가
-- [ ] 장소 수정
-- [ ] 장소 삭제
-- [ ] 주변 운전자 찾기
-- [ ] 주변 운전자 예약
-- [ ] 탑승 요청
-- [ ] 주변 탑승자 조회
-- [ ] 주변 탑승자 예약
-- [ ] 주변 탑승자 찾기 요청
-- [ ] 예약된 주변 탑승자 요청
-- [ ] 예약된 탑승 상태
-- [ ] 채팅방 메세지 얻기
-- [ ] 채팅방 메세지 승인
-- [ ] 채팅 메세지 전달
+현재까지 우리가 작업한 리스트를 보면 **프로파일 조회**까지에 해당된다.
 
 `GetMyProfile` 로 프로파일 조회는 완료 되었다. 이전에 `EmailSignUp` 을 했지만 이메일을 Verify 하지는 않았다.
 
