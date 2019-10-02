@@ -1,3 +1,4 @@
+import User from "../../../entities/User";
 import Verification from "../../../entities/Verification";
 import {
 	CompleteEmailVerificationMutationArgs,
@@ -14,8 +15,9 @@ const resolvers: Resolvers = {
 				args: CompleteEmailVerificationMutationArgs,
 				{ req },
 			): Promise<CompleteEmailVerificationResponse> => {
-				const { user } = req;
+				const user: User = req.user;
 				const { key } = args;
+				// 사용자의 이메일은 있지만 인증을 받지 않은 경우
 				if (user.email) {
 					try {
 						const verification = await Verification.findOne({

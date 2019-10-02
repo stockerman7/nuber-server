@@ -678,11 +678,11 @@ Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful 
 
 ![SMS Geographic Premissions Country Selected](https://lh3.googleusercontent.com/5YLGjjRzlsryDn2-YG5C0CDkzfz3yuPw-pJOVlVPVyZLGTl0nqYzbigjR2cmxNmDKPj-dPe1jc-8q3ETNjd4Rnw1SmVA-xnxmLbuWllTMxiAAU9fi1iZzqF8MluMCFXfC9jWB81q7A=w1080)
 
-<image src="https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK" alt="Build with Programmable SMS" width="720">
+<image src="https://drive.google.com/uc?id=16wSWKV-9RRG8b25uciTWD4yFhig07YuK" alt="Build with Programmable SMS" width="1080">
 
 좌측 메뉴에 `Learn & Build` 를 선택한다. `From` 은 Twilio 에서 보내는 발신 전화이며 `To` 는 한국에서 수신자의 번호이다. 현재 수신자는 구입한 사람으로 되어있다. 나중에 `To` 는 Client 측에서 인증시 입력하면 Client 측으로 5자리 숫자로 구성된 인증 SMS가 전달될 것이다.
 
-<image src="https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk" alt="Twilio Dashboard" width="720">
+<image src="https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk" alt="Twilio Dashboard" width="1080">
 
 Dashboard 하단에 `SID`, `AUTH TOKEN` 이 보인다. `AUTH TOKEN` 은 인증 정보가 오고갈 때 필요한 토큰을 말한다. 중요하기 때문에 외부로 노출되면 안된다. 다음 절에선 `SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 이렇게 3가지로 휴대폰 SMS 인증을 해보자.
 
@@ -858,7 +858,7 @@ export const sendVerificatoinSMS = (to: string, key: string) => {
 
 ----
 
-## #1.37 StartPhoneVerification Resolver part Three: SMS 보내기
+## #1.37 StartPhoneVerification Resolver: SMS 보내기
 
 이제 실제로 SMS 인증 번호가 보내지는 결과를 보도록 하자. `StartPhoneVerification.resolvers.ts` 에서 인증을 보내는 결과를 볼 수 있도록 `console.log(newVerification)` 출력한다.
 
@@ -903,21 +903,21 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
-이제 `http://localhost:4000/playground` 로 접속해서 실제 핸드폰 인증을 보내도록 한다 (주의: PostgresQL 에 접속되있어야 한다).
+이제 `http://localhost:4000/playground` 로 접속해서 실제 핸드폰 인증을 보내도록 한다 (주의: PostgresQL 에 접속 되있어야 한다).
 
 <image src="https://drive.google.com/uc?id=1NP1t8iUmdeww2ZY1s3XOvER-b7DwIXkI" alt="Start_Phone_Verification_Result_00" width="960">
 
+다음 처럼 `console.log(newVerification)` 의 결과가 출력된 것을 볼 수 있다.
+
 <image src="https://drive.google.com/uc?id=1pFF6zPwkGff0kdrFgSboUa1Yj9x500ad" alt="Start_Phone_Verification_Result_01" width="720">
-
-위에서 처럼 `console.log(newVerification)` 의 결과가 출력된 것을 볼 수 있다.
-
-<image src="https://drive.google.com/uc?id=1MLEnnNoN7iCAkRk4IUtMOFHE6yOR-DsY" alt="Start_Phone_Verification_Result_02" width="320">
 
 폰에도 SMS 메세지가 온 것을 볼 수 있다.
 
-<image src="https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P" alt="Start_Phone_Verification_Result_03" width="960">
+<image src="https://drive.google.com/uc?id=1MLEnnNoN7iCAkRk4IUtMOFHE6yOR-DsY" alt="Start_Phone_Verification_Result_02" width="320">
 
 Twilio 에서도 SMS 메세지를 보낸 결과가 나타난다.
+
+<image src="https://drive.google.com/uc?id=1hxoMMTV81mceGoX1SVzFDKrWEmEAIS6P" alt="Start_Phone_Verification_Result_03" width="960">
 
 <image src="https://drive.google.com/uc?id=1bzysaeIRng59UMfooA59P29o41z7V9YR" alt="Start_Phone_Verification_Result_04" width="960">
 
@@ -1403,7 +1403,7 @@ const resolvers: Resolvers = {
 
 그 다음 `EmailSignIn` 에서 비밀번호를 넣어도 추가된 비밀번호가 없기 때문에 비교 대상인 hash 된 비밀번호가 필요하다고 나온다. `"Error: data and hash arguments required"`  반대로 `EmailSignUp` 을 하고 `FacebookConnet` 하면 어떻게 될까? 이것은 서로 다른 고유 `id` 식별자로 생성된다.
 
-이것은 현재까지 테스트 차원에서 확인해보는 것이고 아직 제대로된 코드가 아니라는 것을 참고한다.
+이것은 현재까지 테스트 차원에서 확인해보는 것이고 아직 미완성 코드라는 점을 참고한다.
 
 ----
 
