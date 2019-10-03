@@ -17,6 +17,7 @@ import {
 import Chat from "./Chat";
 import Message from "./Message";
 import Ride from "./Ride";
+import Place from "./Place";
 
 const BCRYPT_ROUNDS = 10; // 몇번 암호화 할 것인지
 
@@ -93,6 +94,9 @@ class User extends BaseEntity {
 
 	@OneToMany(type => Ride, ride => ride.driver)
 	ridesAsDriver: Ride[];
+	
+	@OneToMany(type => Place, place => place.user)
+	places: Place[];
 
 	@CreateDateColumn() createdAt: string;
 
