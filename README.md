@@ -1643,3 +1643,41 @@ export const sendVerificationEmail = (fullName: string, key: string) => {
 ## #1.58 ToggleDrivingMode Resolver
 
 Resolver 작업 리스트를 보면 Private Resolver 에서 프로파일 변경/업데이트 까지 진행되었다. 이제 운전 모드 전환을 다뤄보자.
+
+#### ToggleDrivingMode.graphql
+```graphql
+type ToggleDrivingModeResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  ToggleDrivingMode: ToggleDrivingModeResponse!
+}
+```
+
+#### ToggleDrivingMode.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import { ToggleDrivingModeResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    ToggleDrivingMode: privateResolver(
+      async (_, __, { req }): Promise<ToggleDrivingModeResponse> => {
+        const user: User = req.user;
+        user.isDriving = !user.isDriving; // 현재 운전상태 변경
+        user.save(); // DB 저장
+        return {
+          ok: true,
+          error: null,
+        };
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
