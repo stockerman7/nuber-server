@@ -35,7 +35,7 @@ $ yarn add graphql-to-typescript gql-merge --dev
 
 작동 순서는 `predev`, `pretypes`, `types`, `dev` 이다.
 
-> NOTE: Hot Loading 은 애플리케이션을 재시작하거나 재설정하지 않아도 실행중인 상태에서 업데이트를 하게 해주는 것을 말한다.
+> **NOTE:** Hot Loading 은 애플리케이션을 재시작하거나 재설정하지 않아도 실행중인 상태에서 업데이트를 하게 해주는 것을 말한다.
 
 ----
 
@@ -43,7 +43,7 @@ $ yarn add graphql-to-typescript gql-merge --dev
 이제 ORM 을 이용해 데이터베이스와 연결한다. 그중에서도 TypeORM 을 사용할 것이다. TypeORM 은 TypeScript 및 JavaScript (ES5, ES6, ES7, ES8)와 함께 사용할 수 있는 ORM 이다.
 https://github.com/typeorm/typeorm
 
-> NOTE: ORM 프레임워크(Object-Relational Mapping)는 데이터베이스와 객체 지향 프로그래밍 언어간의 호환되지 않는 데이터를 변환하는 프로그래밍 기법이다.
+> **NOTE:** ORM 프레임워크(Object-Relational Mapping)는 데이터베이스와 객체 지향 프로그래밍 언어간의 호환되지 않는 데이터를 변환하는 프로그래밍 기법이다.
 
 다음 모듈을 설치한다.
 ```bash
@@ -331,7 +331,7 @@ class User extends BaseEntity {
 - `comparePassword` : 이전에 저장한 암호화된 비밀번호와 비교해 맞는지 여부를 확인한다.
 - `hashPassword` : `string` 타입의 비밀번호를 받는다. 이것을 암호화하고 결과를 반환한다. 반환 값도 `string` 타입이다. `bcrypt.hash` 함수 호출시 두번째 매개변수는 몇번 암호화 할 것인지 설정한다.
 
-> NOTE:
+> **NOTE:**
 > 
 > `async savePassword(): Promise<void> {...}` 는 다음 코드와 똑같이 동작한다.
 > 
@@ -362,7 +362,7 @@ type Verification {
 }
 ```
 
-> NOTE: Payload 는 데이터 전달시 헤더와 메타데이터와 같은 데이터는 제외하고 근본적인 목적이 되는 데이터 만을 말한다.
+> **NOTE:** Payload 는 데이터 전달시 헤더와 메타데이터와 같은 데이터는 제외하고 근본적인 목적이 되는 데이터 만을 말한다.
 
 `src/entities/Verification.ts` 를 만들고 다음과 같이 적용한다.
 
@@ -619,7 +619,7 @@ src
 - [ ] 이메일 인증 요청
 - [ ] 이메일 인증 완료
 - [ ] 프로파일 변경
-- [ ] 운전 모드 변환
+- [ ] 운전 모드 전환
 - [ ] 지역 / 위치 분석
 - [ ] 장소 추가
 - [ ] 장소 수정
@@ -652,9 +652,7 @@ Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful 
 > 
 > Representational State Transfer 약자이다. 자원을 이름(자원의 표현)으로 구분해 해당 자원의 상태(정보)를 주고 받는 모든 것을 의미한다.
 > 
-> 여기서 **자원의 표현**이라는 말은 인터넷 프로토콜인 HTTP URI(Uniform Resource Identifier)를 말한다.
-> 
-> 그렇다면 **상태를 전달**한다는 것은 무슨 말일까? 이것은 데이터가 요청되는 시점의 자원의 상태 전달을 말한다. HTTP Method(POST, GET, PUT, DELETE)를 통해 CRUD Operation 한다. 흔히 JSON, XML 을 통해 데이터를 주고 받는다. 웹의 장점을 최대한 활용하는 아키텍처 스타일이다.
+> 여기서 **자원의 표현**이라는 말은 인터넷 프로토콜인 HTTP URI(Uniform Resource Identifier)를 말한다. 그렇다면 **상태를 전달**한다는 것은 무슨 말일까? 이것은 데이터가 요청되는 시점의 자원의 상태 전달을 말한다. HTTP Method(POST, GET, PUT, DELETE)를 통해 CRUD Operation 한다. 흔히 JSON, XML 을 통해 데이터를 주고 받는다. 웹의 장점을 최대한 활용하는 아키텍처 스타일이다.
 
 ![Twilio Buy](https://lh3.googleusercontent.com/mpHlAu7w2d_qtctdN2euJNLZsS9NrZhI8MTZ6LfD37HGdKQOzeYEVK_3OgQeswokZhbTzLte8sibHNbrq7rnxKTI4Mw4ubvv0e1KqL6mLKRtPlAAPxJgoOU0PjfJo-QQ-JXMmKaAog=w1080)
 
@@ -684,7 +682,7 @@ Twilio 는 휴대폰, 이메일 인증과 같은 절차를 도와주는 RESTful 
 
 <image src="https://drive.google.com/uc?id=18bjQJDJX8iqgQSR_s_r4pRwrsgiOGEnk" alt="Twilio Dashboard" width="1080">
 
-Dashboard 하단에 `SID`, `AUTH TOKEN` 이 보인다. `AUTH TOKEN` 은 인증 정보가 오고갈 때 필요한 토큰을 말한다. 중요하기 때문에 외부로 노출되면 안된다. 다음 절에선 `SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 이렇게 3가지로 휴대폰 SMS 인증을 해보자.
+Dashboard 하단에 `ACCOUNT SID`, `AUTH TOKEN` 이 보인다. `AUTH TOKEN` 은 인증 정보가 오고갈 때 필요한 토큰을 말한다. 중요하기 때문에 외부로 노출되면 안된다. 다음 절에선 `ACCOUNT SID`, `AUTH TOKEN`, 발신 `PHONE NUMBER` 이렇게 3가지로 휴대폰 SMS 인증을 해보자.
 
 ----
 
@@ -1403,7 +1401,7 @@ const resolvers: Resolvers = {
 
 그 다음 `EmailSignIn` 에서 비밀번호를 넣어도 추가된 비밀번호가 없기 때문에 비교 대상인 hash 된 비밀번호가 필요하다고 나온다. `"Error: data and hash arguments required"`  반대로 `EmailSignUp` 을 하고 `FacebookConnet` 하면 어떻게 될까? 이것은 서로 다른 고유 `id` 식별자로 생성된다.
 
-이것은 현재까지 테스트 차원에서 확인해보는 것이고 아직 미완성 코드라는 점을 참고한다.
+현재까지 테스트 차원에서 확인해보는 것이고 아직 미완성 코드라는 점을 참고한다.
 
 ----
 
@@ -1495,7 +1493,7 @@ class App {
 
 ## #1.47 GetMyProfile Resolver
 
-이제 GraphQLServer 에서 `context` 를 통해 어떤 Resolver 든 사용자의 정보를 활용할 수 있게 되었다. 그러나 한가지 문제점은 어떻게 사용자 정보를 보호 하느냐다. 다음은 **Currying** 기법을 사용해 사용자 정보를 보호하고 프로파일을 불러오는 방법이다.
+이제 GraphQLServer 에서 `context` 를 통해 어떤 Resolver 든 사용자의 정보를 활용할 수 있게 되었다. 그런데 한가지 문제점은 '사용자 정보를 어떻게 보호할 것인가?' 이다. 그래서 다음은 **Currying** 기법을 사용해 사용자 정보를 보호하고 프로파일을 불러오는 방법을 알아본다.
 
 > **NOTE:**
 > 
@@ -1531,7 +1529,7 @@ type Query {
 import { Resolvers } from "../../../types/resolvers";
 import privateResolver from "../../../utils/privateResolver";
 
-// privateResolver 호출은 GetMyProfile: async (parent, args, context) => {...} 처럼 된다.
+// privateResolver 호출은 GetMyProfile: async (parent, args, context, info) => {...} 처럼 된다.
 const resolvers: Resolvers = {
   Query: {
     GetMyProfile: privateResolver(async (_, __, { req }) => {
@@ -1556,7 +1554,7 @@ export default resolvers;
 
 #### privateResolver.ts
 ```typescript
-// privateResolver 를 호출하는 쪽에선 resolver 함수를 필요시에 호출이 가능하도록 설정만 할 것이다.
+// privateResolver 를 호출하는 쪽에선 resolverFunction 을 필요시에 호출이 가능하도록 설정만 할 것이다.
 const privateResolver = resolverFunction => async (parent, args, context, info) => {
   // context 요청에 user 가 없다면 에러
   if (!context.req.user) {
@@ -1594,25 +1592,17 @@ GetMyProfile: async (parent, args, context, info) => {
 ...
 ```
 
-결국 `resolverFunction` 인자로 보낸 익명 함수는 사용자 Currying 에 맞게 설정만 되는 것이고 실제로 `GetMyProfile` 이 호출되어야 `resolved` 결과를 반환 받는 것이다. Playground 테스트 결과 잘 동작한다.
+결국 `resolverFunction` 인자로 보낸 익명 함수는 사용자 Currying 에 맞게 설정만 되는 것이고 실제로 `GetMyProfile` 이 호출되어야 `resolved` 결과를 반환 받는 것이다. `http://localhost:4000/graphql` 테스트 결과 잘 동작한다.
 
-<image src="https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt" alt="GetMyProfile Test" width="720">
+<image src="https://drive.google.com/uc?id=12JCY3_wVSM_VGvQO2hyzILb-NyN3_WSt" alt="GetMyProfile Test" width="960">
 
-현재까지 우리가 작업한 리스트를 보면 **프로파일 조회**까지에 해당된다.
-
-`GetMyProfile` 로 프로파일 조회는 완료 되었다. 이전에 `EmailSignUp` 을 했지만 이메일을 Verify 하지는 않았다.
+현재까지 우리가 작업한 리스트를 보면 **프로파일 조회**까지에 해당된다. `GetMyProfile` 로 프로파일 조회는 완료 되었다. 그리고 이전에 `EmailSignUp` 만 했지 이메일을 Verify 하지는 않았기 때문에 다음 절에는 이메일 인증 확인 과정을 다룬다.
 
 ## #1.49 Sending Confirmation Email
 
-이전에 SMS 인증을 위해 Twilio RESTful Service 이용했다. 이메일 인증 또한 서비스를 이용할 것이다. [mailgun](https://www.mailgun.com) 사이트를 방문해 가입한다.
+이전에 SMS 인증을 위해 Twilio RESTful Service 이용했다. 이메일 인증 또한 서비스를 이용할 것이다. [mailgun](https://www.mailgun.com) 사이트를 방문해 가입한다. 가입이 완료되고 난 후 Sandbox Domain, API 키가 필요하다. Trial 가입 상태인 경우 이메일을 보내는 정도로만 가능하다.
 
-가입이 완료되고 난 후 Sandbox Domain, API 키가 필요하다.
-
-
-현재는 Trial 가입 상태이기 때문에 이메일을 보내는 정도로만 가능하다.
-
-
-환경변수 `.env` 에 `MAILGUN_API_KEY` 라는 변수로 Private API 키를 등록한다. 이제 `mailgun` 모듈을 설치한다.
+환경변수 `.env` 에 `MAILGUN_API_KEY` 라는 변수로 Private API 키를 저장한다. 이제 `mailgun-js` 모듈과 타입체크를 설치한다.
 
 ```bash
 $ yarn add mailgun-js && yarn add @types/mailgun-js --dev
@@ -1626,14 +1616,14 @@ import Mailgun from "mailgun-js";
 // 이메일 인증 API 연결
 const mailGunClient = new Mailgun({
   apiKey: process.env.MAILGUN_API_KEY || "",
-  domain: "sandbox05dde9880f514a26ba4f58835af4a58b.mailgun.org",
+  domain: "mailgun.org 로 끝나는 자신의 mailgun domain",
 });
 
 // 이메일 인증 API 를 통해 전달할 대상과 내용들
 const sendEmail = (subject: string, html: string) => {
   const emailData = {
-    from: "stockerman7@gmail.com",
-    to: "stockerman7@gmail.com",
+    from: "User@mail.com",
+    to: "User@mail.com", // 테스트를 위해 수신도 같은 이메일을 사용하지만 Product 시에는 변경해야 한다.
     subject,
     html,
   };
@@ -1647,3 +1637,9 @@ export const sendVerificationEmail = (fullName: string, key: string) => {
   sendEmail(emailSubject, emailBody);
 };
 ```
+
+----
+
+## #1.58 ToggleDrivingMode Resolver
+
+Resolver 작업 리스트를 보면 Private Resolver 에서 프로파일 변경/업데이트 까지 진행되었다. 이제 운전 모드 전환을 다뤄보자.
