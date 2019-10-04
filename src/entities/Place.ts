@@ -28,7 +28,8 @@ class Place extends BaseEntity {
 	@Column({ type: "boolean", default: false })
 	isFav: boolean;
 
-	// typeorm 에서는 간편하게 사용자의 ID 를 식별하는 기능을 지원한다.
+	// typeorm 에서는 특정 관계를 이용해 간단히 id 를 로드하는 기능(@RelationId)이 있다.
+	// https://github.com/typeorm/typeorm/blob/master/docs/decorator-reference.md#relationid
 	@Column({ nullable: true })
 	userId: number;
 

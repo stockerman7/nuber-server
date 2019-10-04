@@ -1681,3 +1681,133 @@ const resolvers: Resolvers = {
 
 export default resolvers;
 ```
+
+----
+
+## #1.61 EditPlace Resolver
+
+```graphql
+type EditPlaceResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  EditPlace(placeId: Int!, name: String, isFav: Boolean): EditPlaceResponse!
+}
+```
+
+```typescript
+import Place from "../../../entities/Place";
+import User from "../../../entities/User";
+import { EditPlaceMutationArgs, EditPlaceResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import cleanNullArgs from "../../../utils/cleanNullArgs";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    EditPlace: privateResolver(
+      async (
+        _,
+        args: EditPlaceMutationArgs,
+        { req },
+      ): Promise<EditPlaceResponse> => {
+        const user: User = req.user;
+        try {
+          const place = await Place.findOne({ id: args.placeId });
+          if (place) {
+            // 사용자 id 로 사용자가 즐겨찾는 장소가 맞는지 여부
+            if (place.userId === user.id) {
+              const notNull = cleanNullArgs(args);
+              await Place.update({ id: args.placeId }, { ...notNull });
+            } else {
+              return {
+                ok: false,
+                error: "확인되지 않았습니다.",
+              };
+            }
+            return {
+              ok: true,
+              error: null,
+            };
+          } else {
+            return {
+              ok: false,
+              error: "장소를 찾지 못했습니다.",
+            };
+          }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+typeorm 은 기본적으로 relations(`@ManyToOne`, `@OneToMany`...)을 로드하지 않는다. 그래서 두번째 인자로 옵션을 설정하기 위해 일부분(`user`)의 관계만 로드하기도 한다.
+
+```typescript
+const place = await Place.findOne({ id: args.placeId }, { relations: ["user"] });
+```
+
+그러나 우리는 `User.id` 만 필요하다. 위처럼 하게 된다면 필요하지 않은 정보를 모두 가져온다. typeorm 에서는 `@RelationId` 를 이용하면 쉽게 관계 `id` 를 로드할 수 있다.
+
+그리고 `src/entities/Place.ts` 에서는 다음과 같이 추가한다.
+
+```typescript
+@Entity()
+class Place extends BaseEntity {
+  
+  ...
+
+  @Column({ type: "double precision", default: 0 })
+  lng: number;
+
+  // typeorm 에서는 특정 관계를 이용해 간단히 id 를 로드하는 기능(@RelationId)이 있다.
+  // https://github.com/typeorm/typeorm/blob/master/docs/decorator-reference.md#relationid
+  @Column({ nullable: true })
+  userId: number;
+
+  @ManyToOne(type => User, user => user.places)
+  user: User;
+
+  ...
+
+}
+```
+
+`src/api/Place/shared/Place.graphql` 에도 `userId` 속성을 추가한다.
+
+```graphql
+type Place {
+  id: Int!
+  name: String!
+  lat: Float!
+  lng: Float!
+  address: String!
+  isFav: Boolean!
+  userId: Int! # 추가된 부분
+  user: User!
+  createAt: String!
+  updateAt: String
+}
+```
+
+----
+
+## #1.62 DeletePlace Resolver
+
+```graphql
+
+```
+
+```typescript
+
+```
