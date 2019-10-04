@@ -28,6 +28,10 @@ class Place extends BaseEntity {
 	@Column({ type: "boolean", default: false })
 	isFav: boolean;
 
+	// typeorm 에서는 간편하게 사용자의 ID 를 식별하는 기능을 지원한다.
+	@Column({ nullable: true })
+	userId: number;
+
 	@ManyToOne(type => User, user => user.places)
 	user: User;
 
