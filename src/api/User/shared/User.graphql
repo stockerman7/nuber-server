@@ -1,7 +1,7 @@
 type User {
 	id: Int!
 	email: String
-	verifiedEmail: String!
+	verifiedEmail: Boolean!
 	firstName: String!
 	lastName: String!
 	age: Int

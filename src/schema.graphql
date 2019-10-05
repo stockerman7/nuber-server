@@ -21,7 +21,7 @@ type AddPlaceResponse {
 }
 
 type Mutation {
-  AddPlace(lat: Float!, lng: Float!, address: String!, isFav: Boolean!): AddPlaceResponse!
+  AddPlace(name: String!, lat: Float!, lng: Float!, address: String!, isFav: Boolean!): AddPlaceResponse!
   DeletePlace(placeId: Int!): DeletePlaceResponse!
   EditPlace(placeId: Int!, name: String, isFav: Boolean): EditPlaceResponse!
   CompleteEmailVerification(key: String!): CompleteEmailVerificationResponse!
@@ -46,6 +46,18 @@ type EditPlaceResponse {
   error: String
 }
 
+type GetMyPlacesResponse {
+  ok: Boolean!
+  error: String
+  places: [Place]
+}
+
+type Query {
+  GetMyPlaces: GetMyPlacesResponse!
+  GetMyProfile: GetMyProfileResponse!
+  user: User
+}
+
 type Place {
   id: Int!
   name: String!
@@ -55,8 +67,8 @@ type Place {
   isFav: Boolean!
   userId: Int!
   user: User!
-  createAt: String!
-  updateAt: String
+  createdAt: String!
+  updatedAt: String
 }
 
 type Ride {
@@ -73,8 +85,8 @@ type Ride {
   duration: String!
   driver: User!
   passenger: User!
-  createAt: String!
-  updateAt: String
+  createdAt: String!
+  updatedAt: String
 }
 
 type CompleteEmailVerificationResponse {
@@ -112,11 +124,6 @@ type GetMyProfileResponse {
   user: User
 }
 
-type Query {
-  GetMyProfile: GetMyProfileResponse!
-  user: User
-}
-
 type ReportMovementResponse {
   ok: Boolean!
   error: String
@@ -130,7 +137,7 @@ type RequestEmailVerificationResponse {
 type User {
   id: Int!
   email: String
-  verifiedEmail: String!
+  verifiedEmail: Boolean!
   firstName: String!
   lastName: String!
   age: Int

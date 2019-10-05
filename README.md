@@ -1715,22 +1715,28 @@ const resolvers: Resolvers = {
       ): Promise<EditPlaceResponse> => {
         const user: User = req.user;
         try {
+          // typeorm 은 기본적으로 relations(@ManyToOne, @OneToMany...)을 로드하지 않는다.
+          // 그래서 두번째 인자로 옵션을 설정하기 위해 일부분(user)의 관계만 로드한다.
           const place = await Place.findOne({ id: args.placeId });
           if (place) {
             // 사용자 id 로 사용자가 즐겨찾는 장소가 맞는지 여부
             if (place.userId === user.id) {
-              const notNull = cleanNullArgs(args);
+              const notNull: any = cleanNullArgs(args);
+              // Update 오류로 인해 다음과 같이 수정, ex) notNull -> { placeId: 1, isFav: true }
+              // placeId 는 수정하려고 하는 대상, Place Column 의 일부분이 아니어서 오류가 생김
+              // 다시말해 placeId 는 찾는 대상이지 수정 대상이 아님
+              if (notNull.placeId) { delete notNull.placeId; }
               await Place.update({ id: args.placeId }, { ...notNull });
+              return {
+                ok: true,
+                error: null,
+              };
             } else {
               return {
                 ok: false,
                 error: "확인되지 않았습니다.",
               };
             }
-            return {
-              ok: true,
-              error: null,
-            };
           } else {
             return {
               ok: false,
@@ -1761,6 +1767,7 @@ const place = await Place.findOne({ id: args.placeId }, { relations: ["user"] })
 
 그리고 `src/entities/Place.ts` 에서는 다음과 같이 추가한다.
 
+#### Place.ts
 ```typescript
 @Entity()
 class Place extends BaseEntity {
@@ -1785,6 +1792,7 @@ class Place extends BaseEntity {
 
 `src/api/Place/shared/Place.graphql` 에도 `userId` 속성을 추가한다.
 
+#### Place.graphql
 ```graphql
 type Place {
   id: Int!
@@ -1800,14 +1808,91 @@ type Place {
 }
 ```
 
+`await Place.update({ id: args.placeId }, { ...notNull });` 에서 `update` 에러가 발생할 것이다. 예를들어 다음과 같이 `EditPlace` 로 수정을 하게된다고 하면
+
+```graphql
+mutation {
+  EditPlace(placeId: 1, isFav: true) {
+    ok
+    error
+  }
+}
+```
+
+`notNull` 은 `{ placeId: 1, isFav: true }` 처럼 결과가 나온다. 왜일까? `placeId` 는 업데이트 대상, Place Column 의 일부분이 아니어서 오류가 생기는 것이다. 다시말해 `placeId` 는 찾는 대상이지 수정 대상이 아니다. `if (notNull.placeId) { delete notNull.placeId; }` 로 `placeId` 를 제외한 인자들만 업데이트 되도록 제거해준다.
+
 ----
 
 ## #1.62 DeletePlace Resolver
 
+#### DeletePlace.graphql
 ```graphql
+type DeletePlaceResponse {
+  ok: Boolean!
+  error: String
+}
 
+type Mutation {
+  DeletePlace(placeId: Int!): DeletePlaceResponse!
+}
 ```
 
+#### DeletePlace.resolvers.ts
 ```typescript
+import Place from "../../../entities/Place";
+import User from "../../../entities/User";
+import {
+  DeletePlaceMutationArgs,
+  DeletePlaceResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
 
+const resolvers: Resolvers = {
+  Mutation: {
+    DeletePlace: privateResolver(
+      async (
+        _,
+        args: DeletePlaceMutationArgs,
+        { req },
+      ): Promise<DeletePlaceResponse> => {
+        const user: User = req.user;
+        try {
+          const place = await Place.findOne({ id: args.placeId });
+          if (place) {
+            if (place.userId === user.id) {
+              place.remove();
+              return {
+                ok: true,
+                error: null,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "확인되지 않습니다.",
+              };
+            }
+          } else {
+            return {
+              ok: false,
+              error: "장소를 찾을 수 없습니다.",
+            };
+          }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
 ```
+
+----
+
+## #1.63 GetMyPlaces Resolver and Testing
+
