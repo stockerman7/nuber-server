@@ -11,13 +11,13 @@ const resolvers: Resolvers = {
 					const user = await User.findOne(
 						{ id: req.user.id }, // # 인자1 찾을 조건: 요청 user.id
 						{ relations: ["places"] }, // 인자2 관계 Option: user.places 관계가 있다는 것을 알려준다.
-          );
-          // 해당 사용자가 있을 경우
+					);
+					// 해당 사용자가 있을 경우
 					if (user) {
 						return {
 							ok: true,
 							error: null,
-							places: user.places
+							places: user.places,
 						};
 					} else {
 						return {
