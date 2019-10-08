@@ -1,7 +1,7 @@
 // 미들웨어인 cors, helmet, morgan 이 설치 되어야함, yarn add cors helmet morgan
 import cors from "cors";
 import { NextFunction, Response } from "express";
-import { GraphQLServer } from "graphql-yoga";
+import { GraphQLServer, PubSub } from "graphql-yoga";
 import helmet from "helmet";
 import logger from "morgan";
 // .graphql 과 resolver.ts 를 모두 합친 schema.ts 를 불러온다.
@@ -10,7 +10,10 @@ import decodeJWT from "./utils/decodeJWT"; // JWT 복호화 모듈 불러오기
 
 class App {
 	public app: GraphQLServer;
+	public pubSub: any;
 	constructor() {
+		this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+		this.pubSub.ee.setMaxListeners(99); // 개발용 listener
 		// GraphQL 서버는 src/api 경로 안에 있는 모든 .graphql 타입들과 resolvers.ts 를 알고 있다.
 		// 그러나 .graphql 안의 schema 들과 resolvers.ts 안의 resolvers 타입 간의 types check가 되지는 않는다.
 		// package.json
@@ -20,6 +23,7 @@ class App {
 			context: req => {
 				return {
 					req: req.request,
+					pubSub: this.pubSub,
 				};
 			},
 		});

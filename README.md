@@ -1686,6 +1686,7 @@ export default resolvers;
 
 ## #1.61 EditPlace Resolver
 
+#### EditPlace.graphql
 ```graphql
 type EditPlaceResponse {
   ok: Boolean!
@@ -1697,6 +1698,7 @@ type Mutation {
 }
 ```
 
+#### EditPlace.resolvers.ts
 ```typescript
 import Place from "../../../entities/Place";
 import User from "../../../entities/User";
@@ -1757,15 +1759,13 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
-Typeorm 은 기본적으로 Relations(`@ManyToOne`, `@OneToMany`...)을 로드하지 않는다. 그래서 두번째 인자로 옵션을 설정하기 위해 일부분(`user`)의 관계만 로드하기도 한다.
+Typeorm 은 기본적으로 Relations(`@ManyToOne`, `@OneToMany`...)을 로드하지 않는다. 그래서 두번째 인자로 옵션을 설정하기 위해 일부분(ex: `user`)의 관계만 로드할 수 있다.
 
 ```typescript
 const place = await Place.findOne({ id: args.placeId }, { relations: ["user"] });
 ```
 
-그러나 우리는 `User.id` 만 필요하다. 위처럼 하게 된다면 필요하지 않은 정보를 모두 가져온다. Typeorm 에서는 `@RelationId` 를 이용하면 쉽게 관계 `id` 를 로드할 수 있다.
-
-그리고 `src/entities/Place.ts` 에서는 다음과 같이 추가한다.
+그러나 우리는 `User.id` 만 필요로 한다. `{ relations: "[user]" }` 처럼 하게 된다면 필요하지 않은 `User` 전체 속성을 가져온다. Typeorm 에서는 관계된 `id` 만을 로드하는 기능을 지원한다. 다음과 같이 `src/entities/Place.ts` 에 추가한다.
 
 #### Place.ts
 ```typescript
@@ -1777,8 +1777,10 @@ class Place extends BaseEntity {
   @Column({ type: "double precision", default: 0 })
   lng: number;
 
-  // typeorm 에서는 특정 관계를 이용해 간단히 id 를 로드하는 기능(@RelationId)이 있다.
-  // https://github.com/typeorm/typeorm/blob/master/docs/decorator-reference.md#relationid
+  // typeorm 에서는 특정 관계를 이용해 간단히 전체 속성을 로드하는 기능을 가지고 있다. 예를들면 다음과 같다.
+  // @RelationId((place: Place) => Place.user)
+  // userId: number;
+  // 그러나 여기서는 전체 속성을 로드하지 않을 것이기 때문에 다음과 같이 작성한다.
   @Column({ nullable: true })
   userId: number;
 
@@ -1790,7 +1792,9 @@ class Place extends BaseEntity {
 }
 ```
 
-`src/api/Place/shared/Place.graphql` 에도 `userId` 속성을 추가한다.
+해당 Entity 에 `@RelationId` 를 작성하던 Resolver 구현 부분에서 `{ relations: ["user"] }` 하던 둘 중 하나만 설정해도 관계 속성을 로드하는 것은 같다.
+
+`src/api/Place/shared/Place.graphql` 에는 `userId` 속성을 추가한다.
 
 #### Place.graphql
 ```graphql
@@ -1959,7 +1963,7 @@ export default resolvers;
 
 ----
 
-## #1.64 GetNearbyDrivers Resolver part One
+## #1.64 GetNearbyDrivers Resolver
 
 #### GetNearbyDrivers.graphql
 ```graphql
@@ -2014,7 +2018,7 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
-우리는 지금까지 Typeorm 의 **Active Record** 방식을 사용하면서 Model 자체 내에서 모든 쿼리 방법을 정의하고 모델 방법을 사용하여 개체(Entity)를 저장, 제거 및 로드했다. 간단히 말해 **Model 내에서 데이터베이스에 접근하는 방식**이다. 그래서 Active Record 는 엔터티에 대한 작업을 수행하는 메서드를 제공하는 BaseEntity 클래스를 다음 처럼 만들어 확장했다.
+우리는 지금까지 Typeorm 의 **Active Record** 방식을 사용하면서 Model 자체 내에서 모든 쿼리 방법을 정의하고 모델 방법을 사용하여 개체(Entity)를 저장, 제거 및 로드했다. 간단히 말해 **Model 내에서 데이터베이스에 접근하는 방식**이다. 그래서 Active Record 는 엔터티에 대한 작업을 수행하는 메서드를 제공하는 `BaseEntity` 클래스를 다음과 같이 만들어 확장했다.
 
 ```typescript
 @Entity()
@@ -2023,22 +2027,84 @@ export class User extends BaseEntity {
 }
 ```
 
-그런데 **Data Mapper** 접근 방식은 모든 쿼리 메소드를 Repository 라는 별도의 클래스로 정의하고 Repository 를 사용하여 객체를 저장, 제거 및 로드한다. 간단히 말해 Model 대신 **Repository 내에서 데이터베이스를 접근하는 방식**이다.
+그런데 **Data Mapper** 접근 방식은 모든 쿼리 메소드를 Repository 라는 별도의 클래스로 정의한다. 그리고 Repository 를 사용하여 객체를 저장, 제거 및 로드한다. 간단히 말해 Model 대신 **Repository 내에서 데이터베이스를 접근하는 방식**이다.
 
 참고 : [Active Record vs Data Mapper](https://github.com/typeorm/typeorm/blob/master/docs/active-record-data-mapper.md#active-record-vs-data-mapper), [ORM Patterns: The Trade-Offs of Active Record and Data Mappers for Object-Relational Mapping
 ](https://www.thoughtfulcode.com/orm-active-record-vs-data-mapper/)
 
 > **NOTE:**
 > 
-> ### **Data Mapper?**
+> ### **Data Mapper**
 > 
 > Data Mapper 는 데이터 저장소(종종 관계형 데이터베이스)와 메모리 내 데이터 표현 영역(도메인 계층)간에 양방향 데이터 전송을 수행하는 데이터 액세스 계층을 말한다.
 > 이것을 사용하는 목적은 데이터 저장소와 메모리 내에 데이터 표현을 서로 독립적으로 유지하기 위해서다. 독립적으로 하는 이유는 만일 정전, 메모리 소진, 프로세스 종료가 되더라도 안정적으로 데이터가 데이터베이스에 저장되 있어야 메모리로 되찾아올 수 있기 때문이다.
 >
-> ### **Domain?**
+> ### **Domain**
 > 
-> 속성(Column)들이 가질 수 있는 모든 값들의 집합이다. 쉽게 말해 **표현되는 속성 값의 범위(영역)**이다. 예를들어 학생 릴레이션이 있다고 한다면 학년 속성의 1학년에서 4학년 까지 범위가 도메인이다.
+> 속성(Column)들이 가질 수 있는 모든 값들의 집합이다. 쉽게 말해 '표현되는 속성 값의 범위(영역)'이다. 예를들어 학생 릴레이션이 있다고 한다면 학년 속성의 1학년에서 4학년 까지 범위가 도메인이다.
 
 두 가지 모두 장단점이 있다. 개발에서 항상 명심해야 할 것은 응용 프로그램을 유지 관리하는 방법이다. Data Mapper 는 유지 관리에 용이하며 대형 앱에 유용하다. Active Record 방식은 소규모 앱에 단순하게 유지하기에 좋다.
 
 그렇다면 `GetNearbyDrivers` 에서 `getRepository()` 로 Data Mapper 방식을 사용하는 이유는? 바로 사용자와 드라이버가 데이터베이스 정보를 서로 독립적으로 교류하기 위해서다. 서로 각자 프로세스가 종료되더라도 데이터에 큰 영향을 받지 않는다. 물론 `Between()` 과 같은 Typeorm 에서 지원하는 함수를 사용하려면 Data Mapper 방식을 사용해야 한다.
+
+----
+
+## #1.66 DriversSubscription
+
+> **NOTE:**
+> 
+> ### **Publish & Subscription**
+> 
+
+#### app.ts
+```typescript
+...
+
+import { GraphQLServer, PubSub } from "graphql-yoga";
+
+...
+
+class App {
+  public app: GraphQLServer;
+  public pubSub: any;
+  constructor() {
+    this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+    this.pubSub.ee.setMaxListeners(99); // 개발용 listener
+    this.app = new GraphQLServer({
+      schema,
+      context: req => {
+        return {
+          req: req.request,
+          pubSub: this.pubSub, // Context 로 공유된다.
+        };
+      },
+    });
+    this.middlewares();
+  }
+
+ ...
+
+}
+```
+
+#### DriversSubscription.graphql
+```graphql
+type Subscription {
+  DriversSubscription: User
+}
+```
+
+#### DriversSubscription.resolvers.ts
+```typescript
+const resolvers = {
+  Subscription: {
+    DriversSubscription: {
+      subscribe: (_, __, { pubSub }) => {
+        return pubSub.asyncIterator("driverUpdate"); // 비동기로 반복할 이벤트 설정
+      },
+    },
+  },
+};
+
+export default resolvers;
+```
