@@ -21,9 +21,11 @@ class App {
 			schema,
 			// 나중에 요청이 들어올 시 Callback 으로 전달할 Context, 모든 Resolvers 에서 사용가능
 			context: req => {
+				const { connection: { context = null } = {} } = req;
 				return {
 					req: req.request,
 					pubSub: this.pubSub,
+					context
 				};
 			},
 		});

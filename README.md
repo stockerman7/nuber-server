@@ -2123,18 +2123,65 @@ export default resolvers;
 > 
 > 참고: [Web Socket 이란](http://utk-unm.blogspot.com/2016/10/websocket.html)
 > 
+> WebSocket 을 제대로 알려면 Socket 이 무엇인가를 알아야 한다.
+> 
 > ### **Socket**
 > 
-> 네트워크에 연결된 모든 장치들을 노드(Node)라고 한다. 노드 중에서도 IP 주소를 가지고 있는 것을 호스트(Host)라고 한다. 호스트는 스마트폰, 노트북 그리고 서버도 해당된다. 결국 데이터는 호스트들 끼리 주고 받는 것이다.
+> 네트워크에 연결된 모든 장치들을 노드(Node)라고 한다. 노드 중에서도 IP 주소를 가지고 있는 것을 호스트(Host)라 한다. 호스트는 스마트폰, 노트북 그리고 서버도 해당된다. 결국 데이터는 호스트들 끼리 주고 받는 것이다.
 > 
 > 그러나 실제로 호스트를 찾아가면 데이터의 종점은 프로세스다. 흔히 프로세스는 프로그램, 애플리케이션, S/W 모두를 총칭한다. 애플리케이션 안에는 여러개의 프로세스가 존재한다. 네트워크 상의 데이터 종착점은 서로 다른 프로세스들인 것이다. 다른말로 '데이터는 프로세스 레벨에서 주고 받는다'라고 말할 수 있다.
 > 
-> 데이터가 프로세스에 잘 도착하기 위해선 여러가지 과정을 거친다. 마냥 전달한다고 받는게 아니라 정해진 절차와 규칙이 존재한다. 그 규칙들 중에 우선 호스트를 찾아가는 IP 주소가 필요하다. 주소를 잘 찾아갔다면 이제 그 호스트에 어떤 프로세스로 가야하는지 알려주는 포트(Port) 번호가 필요하다. 결국 포트는 호스트가 내부적으로 프로세스에게 할당한 고유 값이다. 중요한 것은 호스트 내에서도 프로세스를 식별하기 위해 사용되는 값이므로, 같은 호스트 내에서 **서로 다른 프로세스가 같은 포트 번호를 가질 수 없다**.
+> 데이터가 프로세스에 잘 도착하기 위해선 여러가지 과정을 거친다. 마냥 전달한다고 받는게 아니라 정해진 절차와 규칙이 존재한다. 그 규칙들 중에 우선 호스트를 찾아가는 IP 주소가 필요하다. 주소를 잘 찾아갔다면 이제 그 호스트에 어떤 프로세스로 가야하는지 알려주는 포트(Port) 번호가 필요하다. 포트는 호스트가 내부적으로 프로세스에게 할당한 고유 값이다. 고유 값이라는 점이 중요하다. 왜냐하면 호스트 내에서 프로세스를 식별하기 위해 사용되는 값이기 때문에 같은 호스트 내에서 **서로 다른 프로세스가 같은 포트 번호를 가질 수 없기 때문이다**.
 > 
-> 항해 주소를 따라 주소지 항구에 정박하고 닻을 내리면 외국인이 다음으로 찾아갈 곳은 바로 외국인 여권 심사 창구다. 여권 심사 창구에선 그가 누구고, 그가 어디서 왔고, 어떤 주소지, 어떤 방법으로 프로세스로 갈건지 확인해야지만 창구 다음으로 넘어갈 수 있다. 이 창구를 소켓이라고 하며 IP 주소, 포트, 프로토콜 이렇게 3가지가 정의되어야만 열린다. 그런데 창구도 여러개를 가질 수 있다. 이 말은 하나의 프로세스는 수십 수만개의 소켓(창구)을 가질 수 있다는 의미다. 여기서 여권의 역할(인증)을 하는 것이 바로 프로토콜의 Header 이다.
+> 항해 경로를 따라 주소지 항구에 정박하고 닻을 내리면 외국인이 다음으로 찾아갈 곳은 바로 외국인 여권 심사 창구다. 여권 심사 창구에선 그가 누구고, 그가 어디서 왔고, 어떤 주소지, 어떤 방법으로 프로세스로 갈건지 확인해야지만 창구 다음으로 넘어갈 수 있다는 뜻이다. 이 창구를 소켓이라고 하며 IP 주소, 포트, 프로토콜 이렇게 3가지가 정의되어야만 열린다. 그 창구도 여러개를 가질 수 있다. 이 말은 하나의 프로세스는 수십 수만개의 소켓(창구)을 가질 수 있다는 의미다. 여기서 여권의 역할(인증)을 하는 것이 바로 프로토콜의 Header 이다.
 > 
 > 소켓은 네트워크 세계관인 OSI 7계층에서 전송계층(Transport Layer)에 해당한다. 그래서 소켓은 전송계층에서 사용하는 프로토콜이다. 대표적으로 TCP, UDP 가 있다.
 > 
-> 이제 Web Socket 이 무엇인지 감이 올 것이다. Web Socket 은 빠른 양방향 데이터 통신을 위해 브라우저 앱 안에서 웹 데이터가 오고가게 하는 창구다.
+> 이제 Web Socket 이 무엇인지 감이 올 것이다. Web Socket 은 빠른 양방향 데이터 통신을 위해 브라우저 앱 안에서 웹 데이터가 오고가게 하는 창구인 것이다.
 > 
 > 참고: [소켓(Socket) 포트(Port) 뜻과 차이](http://blog.naver.com/PostView.nhn?blogId=myca11&logNo=221389847130&categoryNo=24&parentCategoryNo=0&viewDate=&currentPage=1&postListTopCurrentPage=1&from=postView)
+
+
+```typescript
+
+...
+
+class App {
+  public app: GraphQLServer;
+  public pubSub: any;
+  constructor() {
+    this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+    this.pubSub.ee.setMaxListeners(99); // 개발용 listener
+    this.app = new GraphQLServer({
+      schema,
+      // 나중에 요청이 들어올 시 Callback 으로 전달할 Context, 모든 Resolvers 에서 사용가능
+      context: req => {
+        const { connection: { context = null } = {} } = req;
+        return {
+          req: req.request,
+          pubSub: this.pubSub,
+          context
+        };
+      },
+    });
+    this.middlewares();
+  }
+
+  ...
+
+}
+```
+
+`const { connection: { context = null } = {} } = req;` 은 난해해 보일 수 있다. 먼저 `const { connection: {...} } = req;` 는 `req.connection = {...}` 과 같다. 그런데 `connection` 이 없을 수 있는 경우를 생각해 빈 객체 `req.connection = {}` 를 Default 값으로 넣는다. 
+
+여기에 `const { connection: { context: {...} } } = req;` 까지 붙으면 `req.connection.context = {...}` 이 된다. 그러나 `req.connection` 안에 `context` 가 없을 수 있다. 그래서 `req.connection.context = null` 과 같은 효과를 내기 위해 `{ context = null }` 을 Default 값으로 넣은 것이다.
+
+결국 `context = null`, `connection = {}` 은 Default 값을 준 것이다. 이와 같은 방법을 Destructuring(비구조화, 파괴)이라고 한다.
+
+> **NOTE:** 
+> 
+> ### **Destructuring**
+> 
+> 디스트럭처링(Destructuring)은 구조화된 배열 또는 객체를 Destructuring(비구조화, 파괴)하여 개별적인 변수에 할당하는 것이다. 배열 또는 객체 리터럴에서 필요한 값만을 추출하여 변수에 할당하거나 반환할 때 유용하다.
+> 
+> 참고: [디스트럭처링(Destructuring)](https://poiemaweb.com/es6-destructuring)
