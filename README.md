@@ -2256,3 +2256,18 @@ const resolvers = {
 
 export default resolvers;
 ```
+
+일단 새로운 사용자를 운전자로 만들어 시작해보자.
+<img src="https://drive.google.com/uc?id=1IoD8yvvv73K9PZAd28ih8M3vjcAitu0h" alt="Driver Subscription Test 00" width="960">
+
+운전자 모드로 바꾸고
+<img src="https://drive.google.com/uc?id=1GR7PP_XxH8DYTnq1Vej0TLIoz--VFMcP" alt="Driver Subscription Test 01" width="960">
+
+새로운 위치를 만들고
+<img src="https://drive.google.com/uc?id=1o0SHPLpU6jlg1XoMXQ-SHmesgGy_scOo" alt="Driver Subscription Test 02" width="960">
+
+위치를 다시 0.05 차이로 갱신한다.
+<img src="https://drive.google.com/uc?id=1QzZIlrej0GYZSyC2gQrUfsM1sJHOjFLM" alt="Driver Subscription Test 03" width="960">
+
+0.05 이하, 이상으로 차이나는 것일 경우만 DriversSubscription 이 작동한다.
+<img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 04" width="960">
