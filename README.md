@@ -2037,7 +2037,7 @@ export class User extends BaseEntity {
 > ### **Data Mapper**
 > 
 > Data Mapper 는 데이터 저장소(종종 관계형 데이터베이스)와 메모리 내 데이터 표현 영역(도메인 계층)간에 양방향 데이터 전송을 수행하는 데이터 액세스 계층을 말한다.
-> 이것을 사용하는 목적은 데이터 저장소와 메모리 내에 데이터 표현을 서로 독립적으로 유지하기 위해서다. 독립적으로 하는 이유는 만일 정전, 메모리 소진, 프로세스 종료가 되더라도 안정적으로 데이터가 데이터베이스에 저장되 있어야 메모리로 되찾아올 수 있기 때문이다.
+> 이것을 사용하는 목적은 데이터 저장소와 메모리 내에 데이터 표현을 서로 독립적으로 유지하기 위해서다. 독립적으로 하는 이유는 만일에 대비한 정전, 메모리 소진, 프로세스 종료가 되더라도 안정적으로 데이터가 데이터베이스에 저장되 있어야 나중에 메모리로 되찾아올 수 있기 때문이다.
 >
 > ### **Domain**
 > 
@@ -2277,6 +2277,7 @@ export default resolvers;
 
 ## #1.72 RequestRide Resolver
 
+#### RequestRide.graphql
 ```graphql
 type RequestRideResponse {
   ok: Boolean!
@@ -2299,6 +2300,7 @@ type Mutation {
 }
 ```
 
+#### RequestRide.resolvers.ts
 ```typescript
 import Ride from "../../../entities/Ride";
 import User from "../../../entities/User";
@@ -2339,3 +2341,71 @@ const resolvers: Resolvers = {
 
 export default resolvers;
 ```
+
+----
+
+## #1.73 GetNearbyRides Resolver
+
+#### GetNearbyRides.graphql
+```graphql
+type GetNearbyRidesResponse {
+  ok: Boolean!
+  error: String
+  rides: [Ride]
+}
+
+type Query {
+  GetNearbyRides: GetNearbyRidesResponse!
+}
+```
+
+#### GetNearbyRides.resolvers.ts
+```typescript
+import { Between, getRepository } from "typeorm";
+import Ride from "../../../entities/Ride";
+import User from "../../../entities/User";
+import { GetNearbyRidesResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Query: {
+    GetNearbyRides: privateResolver(
+      async (_, __, { req }): Promise<GetNearbyRidesResponse> => {
+        const user: User = req.user;
+        if (user.isDriving) {
+          const { lastLat, lastLng } = user;
+          try {
+            const rides = await getRepository(Ride).find({
+              status: "REQUESTING",
+              pickUpLat: Between(lastLat - 0.05, lastLat + 0.05),
+              pickUpLng: Between(lastLng - 0.05, lastLng + 0.05),
+            });
+            return {
+              ok: true,
+              error: null,
+              rides,
+            };
+          } catch (error) {
+            return {
+              ok: false,
+              error: error.message,
+              rides: null,
+            };
+          }
+        } else {
+          return {
+            ok: false,
+            error: "당신은 운전자가 아닙니다.",
+            rides: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+----
