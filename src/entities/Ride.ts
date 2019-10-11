@@ -18,6 +18,7 @@ class Ride extends BaseEntity {
 	@Column({
 		type: "text",
 		enum: ["ACCEPTED", "FINISHED", "CANCELED", "REQUESTED", "ONROUTE"],
+		default: "ACCEPTED",
 	})
 	status: rideStatus;
 
@@ -51,8 +52,8 @@ class Ride extends BaseEntity {
 	// Ride 하는 것은 다수의 User(passenger, driver) 이다.
 	@ManyToOne(type => User, user => user.ridesAsPassenger)
 	passenger: User;
-
-	@ManyToOne(type => User, user => user.ridesAsDriver)
+	// Ride 를 요청할 시에는 아직 Driver 가 할당되지 않은 상태기 때문에 nullable 을 설정한다.
+	@ManyToOne(type => User, user => user.ridesAsDriver, { nullable: true })
 	driver: User;
 
 	@CreateDateColumn() createdAt: string;

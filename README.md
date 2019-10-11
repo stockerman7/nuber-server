@@ -2271,3 +2271,71 @@ export default resolvers;
 
 0.05 이하, 이상으로 차이나는 것일 경우만 DriversSubscription 이 작동한다.
 <img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 04" width="960">
+
+
+----
+
+## #1.72 RequestRide Resolver
+
+```graphql
+type RequestRideResponse {
+  ok: Boolean!
+  error: String
+  ride: Ride
+}
+
+type Mutation {
+  RequestRide(
+    pickUpAddress: String!
+    pickUpLat: Float!
+    pickUpLng: Float!
+    dropOffAddress: String!
+    dropOffLat: Float!
+    dropOffLng: Float!
+    price: Float!
+    distance: String!
+    duration: String!
+  ): RequestRideResponse!
+}
+```
+
+```typescript
+import Ride from "../../../entities/Ride";
+import User from "../../../entities/User";
+import {
+  RequestRideMutationArgs,
+  RequestRideResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    RequestRide: privateResolver(
+      async (
+        _,
+        args: RequestRideMutationArgs,
+        { req },
+      ): Promise<RequestRideResponse> => {
+        const user: User = req.user;
+        try {
+          const ride = await Ride.create({ ...args, passenger: user }).save();
+          return {
+            ok: true,
+            error: null,
+            ride,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            ride: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
