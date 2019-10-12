@@ -12,7 +12,7 @@ class App {
 	public app: GraphQLServer;
 	public pubSub: any;
 	constructor() {
-		this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+		this.pubSub = new PubSub(); // Publish & Subscription(발행과 구독, graphql-yoga 자체 지원)
 		this.pubSub.ee.setMaxListeners(99); // 개발용 listener
 		// GraphQL 서버는 src/api 경로 안에 있는 모든 .graphql 타입들과 resolvers.ts 를 알고 있다.
 		// 그러나 .graphql 안의 schema 들과 resolvers.ts 안의 resolvers 타입 간의 types check가 되지는 않는다.

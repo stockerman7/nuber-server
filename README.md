@@ -2037,7 +2037,7 @@ export class User extends BaseEntity {
 > ### **Data Mapper**
 > 
 > Data Mapper 는 데이터 저장소(종종 관계형 데이터베이스)와 메모리 내 데이터 표현 영역(도메인 계층)간에 양방향 데이터 전송을 수행하는 데이터 액세스 계층을 말한다.
-> 이것을 사용하는 목적은 데이터 저장소와 메모리 내에 데이터 표현을 서로 독립적으로 유지하기 위해서다. 독립적으로 하는 이유는 만일에 대비한 정전, 메모리 소진, 프로세스 종료가 되더라도 안정적으로 데이터가 데이터베이스에 저장되 있어야 나중에 메모리로 되찾아올 수 있기 때문이다.
+> 이것을 사용하는 목적은 데이터 저장소와 메모리 내에 데이터 표현을 서로 독립적으로 유지하기 위해서다. 독립적으로 하는 이유는 만일에 대비해 정전, 메모리 소진, 프로세스 종료가 되더라도 안정적으로 데이터가 데이터베이스에 저장되 있어야 나중에 메모리로 되찾아올 수 있기 때문이다.
 >
 > ### **Domain**
 > 
@@ -2068,7 +2068,7 @@ class App {
   public app: GraphQLServer;
   public pubSub: any;
   constructor() {
-    this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+    this.pubSub = new PubSub(); // Publish & Subscription(발행과 구독, graphql-yoga 자체 지원)
     this.pubSub.ee.setMaxListeners(99); // 개발용 listener
     this.app = new GraphQLServer({
       schema,
@@ -2150,7 +2150,7 @@ class App {
   public app: GraphQLServer;
   public pubSub: any;
   constructor() {
-    this.pubSub = new PubSub(); // Publish & Subscription(출판과 구독, graphql-yoga 자체 지원)
+    this.pubSub = new PubSub(); // Publish & Subscription(발행과 구독, graphql-yoga 자체 지원)
     this.pubSub.ee.setMaxListeners(99); // 개발용 listener
     this.app = new GraphQLServer({
       schema,
@@ -2193,6 +2193,7 @@ class App {
 
 사용자의 상태에 따라 발행을 달리해야 한다. 그러기 위해 `graphql-yoga` 에 내장된 `withFilter()` 함수를 사용할 것이다. withFilter 는 해당 구독을 필터해 가공하고 이벤트 정보를 전달 여부를 true, false 로 반환한다.
 
+#### DriversSubscription.resolvers.ts
 ```typescript
 import { withFilter } from "graphql-yoga";
 
@@ -2214,13 +2215,14 @@ const resolvers = {
 export default resolvers;
 ```
 
-payload, context 를 출력해본 결과는 다음과 같다.
+`payload`, `context` 를 출력해본 결과는 다음과 같다.
 
-<img src="">
+<img src="https://drive.google.com/uc?id=1qpfMHJOAqsBXhf7fNvwplZKtWu3nNGH6" alt="Driver Subscription Console.log Result" width="560">
 
+이제 `payload`, `context` 를 활용해 필요한 데이터 전달을 구독한 쪽으로 전달해 보자.
 
 ```typescript
-// 여기서는 운전자를 구독한 측, 바로 사용자 측에서 해야할 이벤트, 즉 운전자와 근접한지 여부를 전달한다.
+// 여기서는 운전자를 구독한 측, 바로 탑승자 측에서 해야할 이벤트, 즉 운전자와 근접한지 여부를 전달한다.
 import { withFilter } from "graphql-yoga";
 import User from "../../../entities/User";
 
@@ -2228,8 +2230,8 @@ const resolvers = {
   Subscription: {
     DriversSubscription: {
       subscribe: withFilter(
-        // ReportMovement(출판된 쪽)에서 구독한 채널을 받아 업데이트 실행되는 구간
-        // pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 사용자 위치를 알기 위해 가져옴
+        // ReportMovement(발행된 쪽)에서 구독한 채널을 받아 업데이트 실행되는 구간
+        // pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 탑승자 위치를 알기 위해 가져옴
         (_, __, { pubSub }) => pubSub.asyncIterator("driverUpdate"),
         (payload, _, { context }) => {
           const user: User = context.currentUser;
@@ -2240,7 +2242,7 @@ const resolvers = {
             },
           } = payload;
           const { lastLat: userLastLat, lastLng: userLastLng } = user;
-          // 운전자, 사용자의 근접 위치를 비교해
+          // 운전자, 탑승자의 근접 위치를 비교해
           // true, false 냐에 따라 Subscription 을 전달하거나 안할 수 있다.
           return (
             driverLastLat >= userLastLat - 0.05 &&
@@ -2257,21 +2259,28 @@ const resolvers = {
 export default resolvers;
 ```
 
-일단 새로운 사용자를 운전자로 만들어 시작해보자.
-<img src="https://drive.google.com/uc?id=1IoD8yvvv73K9PZAd28ih8M3vjcAitu0h" alt="Driver Subscription Test 00" width="960">
+- 자세히 보면 구독하는 쪽에선 Resolvers Type 을 정의하지 않았다. 여기서는 `Mutation` 이 아니고 `Subscription` 이기 때문에 하면 안된다.
+- 운전자, 사용자의 근접 위치를 비교해, 위도 좌우로 0.05 씩, 경도 상하로 0.05 씩 직사각형 범위에 있는지 여부를 판단해 `true`, `false` 를 반환한다.
+
+일단 새로운 `User`를 운전자로 만들어 테스트 해보자.
+
+<img src="https://drive.google.com/uc?id=1IoD8yvvv73K9PZAd28ih8M3vjcAitu0h" alt="Driver Subscription Test 01" width="960">
 
 운전자 모드로 바꾸고
-<img src="https://drive.google.com/uc?id=1GR7PP_XxH8DYTnq1Vej0TLIoz--VFMcP" alt="Driver Subscription Test 01" width="960">
+
+<img src="https://drive.google.com/uc?id=1GR7PP_XxH8DYTnq1Vej0TLIoz--VFMcP" alt="Driver Subscription Test 02" width="960">
 
 새로운 위치를 만들고
-<img src="https://drive.google.com/uc?id=1o0SHPLpU6jlg1XoMXQ-SHmesgGy_scOo" alt="Driver Subscription Test 02" width="960">
+
+<img src="https://drive.google.com/uc?id=1o0SHPLpU6jlg1XoMXQ-SHmesgGy_scOo" alt="Driver Subscription Test 03" width="960">
 
 위치를 다시 0.05 차이로 갱신한다.
-<img src="https://drive.google.com/uc?id=1QzZIlrej0GYZSyC2gQrUfsM1sJHOjFLM" alt="Driver Subscription Test 03" width="960">
+
+<img src="https://drive.google.com/uc?id=1QzZIlrej0GYZSyC2gQrUfsM1sJHOjFLM" alt="Driver Subscription Test 04" width="960">
 
 0.05 이하, 이상으로 차이나는 것일 경우만 DriversSubscription 이 작동한다.
-<img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 04" width="960">
 
+<img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 05" width="960">
 
 ----
 
@@ -2346,6 +2355,8 @@ export default resolvers;
 
 ## #1.73 GetNearbyRides Resolver
 
+운전자(`Driver`)는 앱을 처음으로 실행하면 주변에 탑승자(`Ride`)들 여부를 알아야 한다. 그래서 운전자가 주변에 탑승자들의 여부를 요청하는 함수를 만들어야 한다. 그것을 `GetNearbyRides` 로 만들어 보자.
+
 #### GetNearbyRides.graphql
 ```graphql
 type GetNearbyRidesResponse {
@@ -2364,40 +2375,48 @@ type Query {
 import { Between, getRepository } from "typeorm";
 import Ride from "../../../entities/Ride";
 import User from "../../../entities/User";
-import { GetNearbyRidesResponse } from "../../../types/graph";
+import { GetNearbyRideResponse } from "../../../types/graph";
 import { Resolvers } from "../../../types/resolvers";
 import privateResolver from "../../../utils/privateResolver";
 
 const resolvers: Resolvers = {
   Query: {
-    GetNearbyRides: privateResolver(
-      async (_, __, { req }): Promise<GetNearbyRidesResponse> => {
+    GetNearbyRide: privateResolver(
+      async (_, __, { req }): Promise<GetNearbyRideResponse> => {
         const user: User = req.user;
         if (user.isDriving) {
           const { lastLat, lastLng } = user;
           try {
-            const rides = await getRepository(Ride).find({
+            const ride = await getRepository(Ride).findOne({
               status: "REQUESTING",
               pickUpLat: Between(lastLat - 0.05, lastLat + 0.05),
               pickUpLng: Between(lastLng - 0.05, lastLng + 0.05),
             });
-            return {
-              ok: true,
-              error: null,
-              rides,
-            };
+            if (ride) {
+              return {
+                ok: true,
+                error: null,
+                ride,
+              };
+            } else {
+              return {
+                ok: true,
+                error: null,
+                ride: null
+              }
+            }
           } catch (error) {
             return {
               ok: false,
               error: error.message,
-              rides: null,
+              ride: null,
             };
           }
         } else {
           return {
             ok: false,
             error: "당신은 운전자가 아닙니다.",
-            rides: null,
+            ride: null,
           };
         }
       },
@@ -2409,3 +2428,88 @@ export default resolvers;
 ```
 
 ----
+
+## #1.74 NearbyRideSubscription
+
+운전자 입장에서도 주변에 탑승자가 있는지 여부를 알아야 한다. 여기선 그것을 `NearbyRideSubscription` 로 구현해 보자.
+
+#### NearbyRideSubscription.graphql
+```graphql
+type Subscription {
+  NearbyRideSubscription: Ride
+}
+```
+
+#### NearbyRideSubscription.resolvers.ts
+```typescript
+import { withFilter } from "graphql-yoga";
+import User from "../../../entities/User";
+
+const resolvers = {
+  Subscription: {
+    NearbyRideSubscription: {
+      subscribe: withFilter(
+        (_, __, { pubSub }) => pubSub.asyncIterator("rideRequest"),
+        async (payload, _, { context }) => {
+          // 이 경우엔 Driver 가 User 이다.
+          const user: User = context.currentUser;
+          const {
+            NearbyRideSubscription: { pickUpLat, pickUpLng },
+          } = payload;
+          const { lastLat: userLastLat, lastLng: userLastLng } = user;
+          // 요청하는 사람의 픽업 위치가 Driver 근처라면 true 아니면 false 를 반환
+          return (
+            pickUpLat >= userLastLat - 0.05 &&
+            pickUpLat <= userLastLat + 0.05 &&
+            pickUpLng >= userLastLng - 0.05 &&
+            pickUpLng <= userLastLng + 0.05
+          );
+        },
+      ),
+    },
+  },
+};
+
+export default resolvers;
+```
+
+이제 탑승자 여부를 요청하는 쪽에서 발행이 가능하도록 설정해보도록 하자. `RequestRide.resolvers.ts` 에서 `rideRequest` 리스너와 보낼 데이터를 연결한다.
+
+#### RequestRide.resolvers.ts
+```typescript
+...
+
+const resolvers: Resolvers = {
+  Mutation: {
+    RequestRide: privateResolver(
+      async (
+        _,
+        args: RequestRideMutationArgs,
+        { req, pubSub }, // pubSub 추가
+      ): Promise<RequestRideResponse> => {
+        const user: User = req.user;
+        try {
+          const ride = await Ride.create({ ...args, passenger: user }).save();
+          // rideRequest 발행
+          pubSub.publish("rideRequest", { NearbyRideSubscription: ride });
+          return {
+            ok: true,
+            error: null,
+            ride,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            ride: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+...
+```
+
+이렇게 탑승 요청을 발행한 측에선 탑승자 정보를 전달하고 구독한 측인 Driver 는 탑승자의 위치가 주변에 있는지 여부를 알게 된다.
