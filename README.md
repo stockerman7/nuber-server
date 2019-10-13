@@ -2516,6 +2516,8 @@ const resolvers: Resolvers = {
 
 이렇게 탑승 요청을 발행한 측에선 탑승자 정보를 전달하고 구독한 측인 Driver 는 탑승자의 위치가 주변에 있는지 여부를 알게 된다.
 
+----
+
 ## #1.75 Testing the NearbyRideSubscription
 
 <img src="https://drive.google.com/uc?id=16g0IkyqJnDTdjmz6F7RL-LfO-qxmwK_h" alt="Nearby Ride Subscription 01" width="960">
@@ -2563,5 +2565,199 @@ export type StatusOptions = "ACCEPTED" | "FINISHED" | "CANCELED" | "REQUESTING" 
 ```
 
 ```typescript
+import Ride from "../../../entities/Ride";
+import User from "../../../entities/User";
+import {
+	UpdateRideStatusMutationArgs,
+	UpdateRideStatusResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
 
+const resolvers: Resolvers = {
+  Mutation: {
+    UpdateRideStatus: privateResolver(
+      async (
+        _,
+        args: UpdateRideStatusMutationArgs,
+        { req },
+      ): Promise<UpdateRideStatusResponse> => {
+        const user: User = req.user;
+        // 사용자가 운전중인 경우, 즉 사용자가 Driver 인 경우
+        // 운전자(Driver)가 탑승한(Ride) 경우와 승객(Passenger)이 탑승한 경우를 따져야 함
+        if (user.isDriving) {
+          try {
+            let ride: Ride | undefined;
+            // Driver 가 탑승을 승인(ACCEPTED)할 경우, 기존 상태는 요청(REQUESTING) 상태야 한다.
+            if (args.status === "ACCEPTED") {
+              ride = await Ride.findOne({
+                id: args.rideId,
+                status: "REQUESTING",
+              });
+              if (ride) {
+                // 이제 사용자는 Driver 입장이 된다. 사용자 상태 업데이트/저장
+                ride.driver = user;
+                user.isTaken = true;
+                user.save();
+              }
+            } else {
+              ride = await Ride.findOne({
+                id: args.rideId,
+                driver: user,
+              });
+            }
+            if (ride) {
+              ride.status = args.status;
+              ride.save();
+              return {
+                ok: true,
+                error: null,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "승차를 업데이트 할 수 없습니다.",
+              };
+            }
+          } catch (error) {
+            return {
+              ok: false,
+              error: error.message,
+            };
+          }
+        } else {
+          return {
+            ok: false,
+            error: "당신은 운전자가 아닙니다.",
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+----
+
+## #1.78 GetRide Resolver
+
+#### GetRide.graphql
+```graphql
+type GetRideResponse {
+  ok: Boolean!
+  error: String
+  ride: Ride
+}
+
+type Query {
+  GetRide(rideId: Int!): GetRideResponse!
+}
+```
+
+### GetRide.resolvers.ts
+```typescript
+import Ride from "../../../entities/Ride";
+import User from "../../../entities/User";
+import { GetRideQueryArgs, GetRideResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Query: {
+    GetRide: privateResolver(
+      async (_, args: GetRideQueryArgs, { req }): Promise<GetRideResponse> => {
+        const user: User = req.user;
+        try {
+          const ride = await Ride.findOne({
+            id: args.rideId,
+          });
+          if (ride) {
+            if (ride.passengerId === user.id || ride.driverId === user.id) {
+              return {
+                ok: true,
+                error: null,
+                ride,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "인증되지 않았습니다.",
+                ride: null,
+              };
+            }
+          } else {
+            return {
+              ok: false,
+              error: "탑승을 찾을 수 없습니다.",
+              ride: null,
+            };
+          }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            ride: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+#### Ride.ts
+```typescript
+@Entity()
+class Ride extends BaseEntity {
+  @PrimaryGeneratedColumn() id: number;
+
+  @Column({
+    type: "text",
+    enum: ["ACCEPTED", "FINISHED", "CANCELED", "REQUESTING", "ONROUTE"],
+    default: "REQUESTING",
+  })
+  status: rideStatus;
+
+  ...
+
+  @Column({ nullable: true })
+  passengerId: number;
+
+  @Column({ nullable: true })
+  driverId: number;
+
+  // 다수의 Ride(승객)는 한명의 User(passenger, driver)를 갖는다.
+  @ManyToOne(type => User, user => user.ridesAsPassenger)
+  passenger: User;
+
+  ...
+
+}
+```
+
+#### Ride.graphql
+```graphql
+type Ride {
+  id: Int!
+  status: String!
+  pickUpAddress: String!
+  pickUpLat: Float!
+  pickUpLng: Float!
+  dropOffAddress: String!
+  dropOffLat: Float!
+  dropOffLng: Float!
+  price: Float!
+  distance: String!
+  duration: String!
+  driver: User!
+  driverId: Int! # 추가된 부분
+  passenger: User!
+  passengerId: Int! # 추가된 부분
+  createdAt: String!
+  updatedAt: String
+}
 ```

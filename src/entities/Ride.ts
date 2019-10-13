@@ -18,7 +18,7 @@ class Ride extends BaseEntity {
 	@Column({
 		type: "text",
 		enum: ["ACCEPTED", "FINISHED", "CANCELED", "REQUESTING", "ONROUTE"],
-		default: "ACCEPTED",
+		default: "REQUESTING",
 	})
 	status: rideStatus;
 
@@ -48,6 +48,12 @@ class Ride extends BaseEntity {
 
 	@Column({ type: "text" })
 	duration: string;
+
+	@Column({ nullable: true })
+	passengerId: number;
+
+	@Column({ nullable: true })
+	driverId: number;
 
 	// 다수의 Ride(승객)는 한명의 User(passenger, driver)를 갖는다.
 	@ManyToOne(type => User, user => user.ridesAsPassenger)
