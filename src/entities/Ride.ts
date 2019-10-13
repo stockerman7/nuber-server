@@ -49,7 +49,7 @@ class Ride extends BaseEntity {
 	@Column({ type: "text" })
 	duration: string;
 
-	// Ride 하는 것은 다수의 User(passenger, driver) 이다.
+	// 다수의 Ride(승객)는 한명의 User(passenger, driver)를 갖는다.
 	@ManyToOne(type => User, user => user.ridesAsPassenger)
 	passenger: User;
 	// Ride 를 요청할 시에는 아직 Driver 가 할당되지 않은 상태기 때문에 nullable 을 설정한다.

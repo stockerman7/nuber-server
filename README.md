@@ -631,6 +631,8 @@ src
 - [ ] 주변 탑승자 예약
 - [ ] 주변 탑승자 찾기 요청
 - [ ] 예약된 주변 탑승자 요청
+- [ ] 탑승 상태 갱신
+- [ ] 탑승 조회
 - [ ] 예약된 탑승 상태
 - [ ] 채팅방 메세지 얻기
 - [ ] 채팅방 메세지 승인
@@ -2191,7 +2193,7 @@ class App {
 
 ## #1.70 Filtering Subscription Messages
 
-사용자의 상태에 따라 발행을 달리해야 한다. 그러기 위해 `graphql-yoga` 에 내장된 `withFilter()` 함수를 사용할 것이다. withFilter 는 해당 구독을 필터해 가공하고 이벤트 정보를 전달 여부를 true, false 로 반환한다.
+사용자의 상태에 따라 발행을 달리해야 한다. 그러기 위해 `graphql-yoga` 에 내장된 `withFilter()` 함수를 사용할 것이다. `withFilter()` 는 해당 구독을 통해 필요한 정보만 필터해 가공한다. 그리고 전달 여부를 `true`, `false` 로 반환한다.
 
 #### DriversSubscription.resolvers.ts
 ```typescript
@@ -2513,3 +2515,53 @@ const resolvers: Resolvers = {
 ```
 
 이렇게 탑승 요청을 발행한 측에선 탑승자 정보를 전달하고 구독한 측인 Driver 는 탑승자의 위치가 주변에 있는지 여부를 알게 된다.
+
+## #1.75 Testing the NearbyRideSubscription
+
+<img src="https://drive.google.com/uc?id=16g0IkyqJnDTdjmz6F7RL-LfO-qxmwK_h" alt="Nearby Ride Subscription 01" width="960">
+
+<img src="https://drive.google.com/uc?id=1tumconDE9i7Y1f-jQQX0IO9tungsCp1i" alt="Nearby Ride Subscription 02" width="960">
+
+<img src="https://drive.google.com/uc?id=1BMG8YjtGUiHKVWMmnHByWLNGdr6P45zr" alt="Nearby Ride Subscription 03" width="960">
+
+----
+
+## #1.76 UpdateRideStatus Resolver
+
+```graphql
+type UpdateRideStatusResponse {
+  ok: Boolean!
+  error: String
+}
+
+enum StatusOptions {
+  ACCEPTED
+  FINISHED
+  CANCELED
+  REQUESTING
+  ONROUTE
+}
+
+type Mutation {
+  UpdateRideStatus(
+    rideId: Int!
+    status: StatusOptions!
+  ): UpdateRideStatusResponse!
+}
+```
+
+> **NOTE:**
+> 
+> ### **열거형(enumerated type)**
+> 
+> Enum은 열거형이라고 불리며, 서로 연관된 상수들의 집합을 의미한다.
+
+`src/types/graph.d.ts` 를 살펴보면 열거형은 다음과 같이 변형된 것을 확인할 수 있다.
+
+```typescript
+export type StatusOptions = "ACCEPTED" | "FINISHED" | "CANCELED" | "REQUESTING" | "ONROUTE";
+```
+
+```typescript
+
+```

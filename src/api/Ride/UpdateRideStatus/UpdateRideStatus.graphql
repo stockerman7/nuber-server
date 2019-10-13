@@ -1,0 +1,19 @@
+type UpdateRideStatusResponse {
+	ok: Boolean!
+	error: String
+}
+# enum: 열거형이란 서로 연관된 상수들의 집합을 말한다.
+enum StatusOptions {
+	ACCEPTED
+	FINISHED
+	CANCELED
+	REQUESTING
+	ONROUTE
+}
+
+type Mutation {
+	UpdateRideStatus(
+		rideId: Int!
+		status: StatusOptions!
+	): UpdateRideStatusResponse!
+}
