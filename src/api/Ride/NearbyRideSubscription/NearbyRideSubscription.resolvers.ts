@@ -8,7 +8,7 @@ const resolvers = {
 			subscribe: withFilter(
 				(_, __, { pubSub }) => pubSub.asyncIterator("rideRequest"),
 				async (payload, _, { context }) => {
-          // 이 경우엔 Driver 가 User 이다.
+          // 이 User 경우엔 Driver 이다.
 					const user: User = context.currentUser;
 					const {
 						NearbyRideSubscription: { pickUpLat, pickUpLng },

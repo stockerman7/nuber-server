@@ -30,7 +30,7 @@ const resolvers: Resolvers = {
 					} else {
 						return {
 							ok: false,
-							error: "탑승을 찾을 수 없습니다.",
+							error: "탑승자를 찾을 수 없습니다.",
 							ride: null,
 						};
 					}

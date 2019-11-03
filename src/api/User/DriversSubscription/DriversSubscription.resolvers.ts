@@ -6,8 +6,8 @@ const resolvers = {
 	Subscription: {
 		DriversSubscription: {
 			subscribe: withFilter(
-				// ReportMovement(발행된 쪽)에서 구독한 채널을 받아 업데이트 실행되는 구간
-				// pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 탑승자 위치를 알기 위해 가져옴
+				// ReportMovement(게시한 쪽)에서 구독한 채널을 받아 업데이트 실행되는 구간
+        // pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 탑승자 위치를 알기 위해 가져옴(단, 현재 운전자와 탑승자 정보가 동일함)
 				(_, __, { pubSub }) => pubSub.asyncIterator("driverUpdate"),
 				(payload, _, { context }) => {
 					const user: User = context.currentUser;

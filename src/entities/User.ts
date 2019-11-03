@@ -8,7 +8,6 @@ import {
 	Column,
 	CreateDateColumn,
 	Entity,
-	ManyToOne,
 	OneToMany,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
@@ -79,9 +78,12 @@ class User extends BaseEntity {
 	@Column({ type: "text", nullable: true })
 	fbID: string;
 
-	// 수많은 User는 하나의 Chat에 있다.
-	@ManyToOne(type => Chat, chat => chat.participants)
-	chat: Chat;
+	// 한명의 User는 다수의 Chat 상대(passenger, driver)가 있다.
+	@OneToMany(type => Chat, chat => chat.passenger)
+	chatsAsPassenger: Chat[];
+
+	@OneToMany(type => Chat, chat => chat.driver)
+	chatsAsDriver: Chat[];
 
 	// 한명의 User는 다수의 메세지를 보낼 수 있다.
 	@OneToMany(type => Message, message => message.user)

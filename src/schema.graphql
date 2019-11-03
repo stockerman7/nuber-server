@@ -1,7 +1,10 @@
 type Chat {
   id: Int!
   messages: [Message]
-  participants: [User]
+  passengerId: Int
+  passenger: User
+  driverId: Int
+  driver: User
   createdAt: String!
   updatedAt: String
 }
@@ -90,6 +93,7 @@ type GetRideResponse {
 
 type Subscription {
   NearbyRideSubscription: Ride
+  RideStatusSubscription: Ride
   DriversSubscription: User
 }
 
@@ -112,7 +116,7 @@ type Ride {
   distance: String!
   duration: String!
   driver: User!
-  driverId: Int!
+  driverId: Int
   passenger: User!
   passengerId: Int!
   createdAt: String!
@@ -203,7 +207,8 @@ type User {
   lastLat: Float
   lastOrientation: Float
   fbID: String
-  chat: Chat
+  chatsAsPassenger: [Chat]
+  chatsAsDriver: [Chat]
   messages: [Message]
   ridesAsPassenger: [Ride]
   ridesAsDriver: [Ride]

@@ -17,15 +17,17 @@ const resolvers: Resolvers = {
 			): Promise<CompleteEmailVerificationResponse> => {
 				const user: User = req.user;
 				const { key } = args;
-				// 사용자의 이메일은 있지만 인증을 받지 않은 경우
+				// 사용자의 이메일은 있지만 인증이 완료되지 않은 경우
 				if (user.email) {
 					try {
+						// 이메일과 key 로 사용자를 찾는다.
 						const verification = await Verification.findOne({
 							key,
 							payload: user.email,
 						});
 						if (verification) {
-							user.verifiedEmail = true; // User.verifiedEmail Entity 에 변경
+							// User.verifiedEmail Entity 에 변경
+							user.verifiedEmail = true;
 							user.save(); // DB 저장
 							return {
 								ok: true,
@@ -34,7 +36,7 @@ const resolvers: Resolvers = {
 						} else {
 							return {
 								ok: false,
-								error: "이메일을 인증할 수 없습니다.",
+								error: "이메일을 확인할 수 없습니다.",
 							};
 						}
 					} catch (error) {

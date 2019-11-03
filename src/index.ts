@@ -20,8 +20,8 @@ const appOptions: Options = {
 	endpoint: GRAPHQL_ENDPOINT, // graphql endpoint
 	subscriptions: {
 		path: SUBSCRIPTION_ENDPOINT,
-		onConnect: async connectionParam => {
-			const token = connectionParam["X-JWT"];
+		onConnect: async connectionParams => {
+			const token = connectionParams["X-JWT"];
 			if (token) {
 				const user = await decodeJWT(token);
 				if (user) {

@@ -17,16 +17,18 @@ $ yarn add graphql-to-typescript gql-merge --dev
 
 우선 설치한 것들을 코드에서 직접 작성해 실행되도록 적용하진 않을 것이다. `package.json` 에서 `scripts` 설정을 통해 실행되도록 적용할 것이다.
 
-### package.json 설정
+#### package.json 설정
 
 ```json
 ...
+
 "scripts": {
   "predev": "yarn run types",
   "dev": "cd src && nodemon --exec ts-node index.ts -e ts,graphql",
   "pretypes": "gql-merge --out-file ./src/schema.graphql ./src/api/**/*.graphql",
   "types": "graphql-to-typescript ./src/schema.graphql ./src/types/graph.d.ts"
 },
+
 ...
 ```
 - `dev` : `nodemon --exec ts-node index.ts` 는 Hot Loading 이다. (우선 전제 nodemon, ts-node 설치) `ts-node` 는 `index.ts` 를 실행(`.ts` 를 `.js` 로 변환)한다. 그리고 `nodemon` 이 다른 확장자 `ts, graphql` 을 감시하도록 `-e` 옵션을 준다.
@@ -634,6 +636,7 @@ src
 - [ ] 탑승 상태 갱신
 - [ ] 탑승 조회
 - [ ] 예약된 탑승 상태
+- [ ] 채팅방 만들기
 - [ ] 채팅방 메세지 얻기
 - [ ] 채팅방 메세지 승인
 - [ ] 채팅 메세지 전달
@@ -1600,28 +1603,51 @@ GetMyProfile: async (parent, args, context, info) => {
 
 현재까지 우리가 작업한 리스트를 보면 **프로파일 조회**까지에 해당된다. `GetMyProfile` 로 프로파일 조회는 완료 되었다. 그리고 이전에 `EmailSignUp` 만 했지 이메일을 Verify 하지는 않았기 때문에 다음 절에는 이메일 인증 확인 과정을 다룬다.
 
+----
+
 ## #1.49 Sending Confirmation Email
 
-이전에 SMS 인증을 위해 Twilio RESTful Service 이용했다. 이메일 인증 또한 서비스를 이용할 것이다. [mailgun](https://www.mailgun.com) 사이트를 방문해 가입한다. 가입이 완료되고 난 후 Sandbox Domain, API 키가 필요하다. Trial 가입 상태인 경우 이메일을 보내는 정도로만 가능하다.
+여기서는 이메일 인증을 위한 API 를 얻고 적용시키는 작업을 한다. 그리고 이미 폰번호를 인증 받은 사용자만이 이메일 가입을 할 수 있다는 것을 전제로 한다.
 
-환경변수 `.env` 에 `MAILGUN_API_KEY` 라는 변수로 Private API 키를 저장한다. 이제 `mailgun-js` 모듈과 타입체크를 설치한다.
+이전 과정에서 SMS 인증을 위해 Twilio RESTful Service 이용했다. 이메일 인증 또한 서비스를 이용할 것이다. [mailgun](https://www.mailgun.com) 사이트를 방문해 가입한다. 가입이 완료되고 난 후 Sandbox Domain, API 키가 필요하다. Trial 가입 상태인 경우 이메일을 보내는 정도로만 가능하다. 나 아닌 다른 사용자로 보내고 싶다면 유료를 이용해야 한다.
+
+<img src="https://drive.google.com/uc?id=1CpeJ9DPH_vnz3n9ddds1hsuTFo9NilTB" alt="mailgun basic 01" width="960">
+
+가입을 한다.
+
+<img src="https://drive.google.com/uc?id=1lpS1Qlt9Mwc2-q69uNkvSdT7WgPw-Ycc" alt="mailgun basic 02" width="960">
+
+하단에 Sandbox Domain 을 클릭한다. 여기서 Domain 이란 IP 주소를 사용자가 원활하게 사용할 수 있도록 문자로 표현한 주소 체계를 말한다.(주의⚠️: 데이터베이스의 도메인과는 다르다.) 이 도메인 주소도 나중에 필요하다.
+
+<img src="https://drive.google.com/uc?id=1-OGlEWev9LgJ2Qj34oFo5tqtXGTAQ6xn" alt="mailgun basic 03" width="960">
+
+개발 API 를 선택해 API Key 를 얻는다.
+
+<img src="https://drive.google.com/uc?id=1JArrSV6B_d8-A8HUzPZ3q3nTR6vFC7q9" alt="mailgun basic 04" width="960">
+
+그리고 우측 상단에 Authorized Recipients(인증 수령인) 에 보낼 이메일을 기입한다.
+
+<img src="https://drive.google.com/uc?id=10Qw2adZJEMyzzvO4ieW_o95mE1DpytZt" alt="mailgun basic 05" width="960">
+
+이전에 mailgun 에서 얻은 API Key 를 환경변수 `.env` 에 `MAILGUN_API_KEY` 라는 변수로 Private API 키를 저장한다. 이제 `mailgun-js` 모듈과 타입체크를 설치한다.
 
 ```bash
 $ yarn add mailgun-js && yarn add @types/mailgun-js --dev
 ```
 
-그리고 `src/utils/sendEmail.ts` 파일을 만든다.
+그리고 `src/utils/sendEmail.ts` 파일을 만들고 다음과 같이 코드를 적용한다.
 
+#### sendEmail.ts
 ```typescript
 import Mailgun from "mailgun-js";
 
-// 이메일 인증 API 연결
+// #1 새 이메일 인증 API 생성
 const mailGunClient = new Mailgun({
   apiKey: process.env.MAILGUN_API_KEY || "",
-  domain: "mailgun.org 로 끝나는 자신의 mailgun domain",
+  domain: "sandbox05dde9843f514a26ba4f34990af4a58b.mailgun.org",
 });
 
-// 이메일 인증 API 를 통해 전달할 대상과 내용들
+// #2 이메일 인증 API 를 통해 전달할 대상과 내용들
 const sendEmail = (subject: string, html: string) => {
   const emailData = {
     from: "User@mail.com",
@@ -1632,13 +1658,391 @@ const sendEmail = (subject: string, html: string) => {
   return mailGunClient.messages().send(emailData);
 };
 
-// 실제로 인증 이메일을 보내는 역할
+// #3 실제로 인증 이메일을 보내기
 export const sendVerificationEmail = (fullName: string, key: string) => {
   const emailSubject = `안녕하세요. ${fullName}님, 당신의 이메일 인증입니다.`;
   const emailBody = `<a href="http://nuber.com/verification/${key}/">여기<a>를 클릭해 당신의 이메일을 인증해주세요.`;
   sendEmail(emailSubject, emailBody);
 };
 ```
+
+- Mailgun 생성자로 `apiKey`, `domain` 을 등록해 새로운 인증 이메일을 생성한다.
+- 실제로 이메일을 보내기 위한 `sendEmail` 함수를 만들어 송수신자 이메일 주소와 이메일 타이틀, 이메일 내용을 설정한다.
+- 인증 이메일 보내기 전에 수신 대상자 이름과 인증받을 Key 이렇게 두개의 인자를 포함시키는 `sendVerificationEmail` 함수를 만든다.
+
+#### EmailSignUp.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import Verification from "../../../entities/Verification";
+import {
+	EmailSignUpMutationArgs,
+	EmailSignUpResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import createJWT from "../../../utils/createJWT";
+import { sendVerificationEmail } from "../../../utils/sendEmail";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    EmailSignUp: async (
+      _,
+      args: EmailSignUpMutationArgs,
+    ): Promise<EmailSignUpResponse> => {
+      const { email } = args;
+      // 기존에 있는 사용자는 가입이 아니라 로그인
+      try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return {
+            ok: false,
+            error: "이미 가입된 사용자, 대신 로그인 합니다.",
+            token: null,
+          };
+        } else {
+          // 폰인증을 받은 사용자만이 이메일 가입이 가능하다.
+          const phoneVerification = await Verification.findOne({
+            payload: args.phoneNumber,
+            verified: true,
+          });
+          if (phoneVerification) {
+            const newUser = await User.create({ ...args }).save();
+            // 이메일을 사용자가 input 했다면 새로운 인증을 받아야 한다.
+            if (newUser.email) {
+              const emailVerification = await Verification.create({
+                payload: newUser.email,
+                target: "EMAIL",
+              }).save();
+              await sendVerificationEmail(
+                newUser.fullName,
+                emailVerification.key,
+              );
+            }
+            const token = createJWT(newUser.id);
+            return {
+              ok: true,
+              error: null,
+              token,
+            };
+          } else {
+            return {
+              ok: false,
+              error: "당신의 폰번호는 인증되지 않았습니다.",
+              token: null,
+            };
+          }
+        }
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message,
+          token: null,
+        };
+      }
+    },
+  },
+};
+
+export default resolvers;
+```
+
+- `EmailSignUp` 은 `if (existingUser)` 로 기존 사용자인지 이메일로 확인을 한다.
+- 폰인증을 받은 사용자만 이메일 가입이 가능하다. 먼저 `if (phoneVerification)` 로 폰인증 이력이 있는지 확인한다. 이것을 하지 않으면 폰인증을 이미 받았는데도 이메일 인증을 따로 받게되고 또 다른 사용자로 등록된다.
+- `if (newUser.email)` 을 통과하고 `Verification` 을 새로 생성한다. 그 다음 `.save()` 한다. 만일 저장하지 않는다면 받는 쪽에서 `undefined` 로 나타난다. 왜냐하면 Verification Entity 에서 `@BeforeInsert()` 가 동작하지 않기 때문이다.
+    ```typescript
+    @Entity()
+    class Verification extends BaseEntity {
+
+      ...
+
+      @BeforeInsert()
+      createKey(): void { ... }
+
+    }
+    ```
+- 새로 가입한 사용자는 DB 에 저장, `{ ...args }` 를 사용한 이유는 User Scheme 중에 `EmailSignUpMutationArgs` 에 정의된 Entity(`firstName`, `lastName`, `email`, `password`, `profilePhoto`, `age`, `phoneNumber`)로 생성될 것이다.
+- 이제 새로운 사용자 이메일이 기입되면 그 이메일로 새로운 인증을 생성하고 인증된 이력을 저장한다.
+- 저장 후 사용자 이름인 `newUser.fullName` 과 새로 생성된 키 `emailVerification.key` 를 `sendVerificationEmail` 로 인증 이메일을 전달한다.
+
+> **주의⚠️:**
+> 
+> 테스트 시 `EmailSignUp` 보다 `FacebookConnect` 을 먼저 한다면 기존 사용자로 인식하기 때문에 새로운 비밀번호가 적용되지 않는다. 나중에 `EmailSignIn` 에서 비교할 비밀번호가 없기 때문에 `bcrypt.compare Error` 가 발생한다.
+
+폰번호 인증이 되어 있다는 가정하에 테스트를 진행한 결과는 다음과 같다. `EmailSignUp` 을 서버로 전달한다.
+
+<img src="https://drive.google.com/uc?id=1Cp_k5k8O76KFYI4VHQLgxzBp4p2OUVzH" alt="Testing Email Sending 02" width="960">
+
+자신의 이메일로 인증이 날라온다. (주의⚠️: 스팸메일로 들어가지 않도록 한다.)
+
+<img src="https://drive.google.com/uc?id=1LVO3E9CfwwD-jJSUslBmJG8oR-PF1qk0" alt="Testing Email Sending 01" width="960">
+
+mailgun 사이트 log 정보에서도 확인이 가능하다.
+
+<img src="https://drive.google.com/uc?id=1yP_ImlhyAugbwAZfscFqysgaInI4PFds" alt="Testing Email Sending 03" width="960">
+
+'여기'를 클릭하면 인증 완료된 `nuber.com/verification/${key}` 사이트로 이동한다. 사용자에게 보낸 인증키가 URL 에 담긴 것을 볼 수 있다.
+
+<img src="https://drive.google.com/uc?id=1K6Hr3LPwhlhc99PazqEOI6XcxZSDzkb1" alt="Testing Email Sending 04" width="960">
+
+----
+
+## #1.53 RequestEmailVerification Resolver
+
+사용자는 이메일 가입이 과정과는 별개로 기존에 받은 인증과는 상관없이 새 이메일 인증을 받아야 하는 경우가 있다. 예를들어 새로운 이메일로 인증을 받고 싶다거나 기존 이메일이 더이상 쓸 수 없어 업데이트 해야할 경우를 들 수 있다.
+
+#### RequestEmailVerification.graphql
+```graphql
+type RequestEmailVerificationResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  RequestEmailVerification: RequestEmailVerificationResponse!
+}
+```
+
+#### RequestEmailVerification.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import Verification from "../../../entities/Verification";
+import { RequestEmailVerificationResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+import { sendVerificationEmail } from "../../../utils/sendEmail";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    RequestEmailVerification: privateResolver(
+      async (_, __, { req }): Promise<RequestEmailVerificationResponse> => {
+        const user: User = req.user;
+        // #1 작성된 이메일이 인증이 안된 새로운 이메일이라면
+        if (user.email && !user.verifiedEmail) {
+          try {
+            // #2 이전에 인증된 이메일은 DB에서 제거한다.
+            const oldVerification = await Verification.findOne({
+              payload: user.email,
+            });
+            if (oldVerification) {
+              oldVerification.remove();
+            }
+            // #3 새로운 이메일 인증 생성, DB에 저장해 나중에 인증을 완료할 때 key 를 확인한다.
+            const newVerification = await Verification.create({
+              payload: user.email,
+              target: "EMAIL",
+            }).save();
+            // #4 Client 이메일 인증을 위한 Private Key 전송
+            await sendVerificationEmail(user.fullName, newVerification.key);
+            return {
+              ok: true,
+              error: null,
+            };
+          // 인증이 안된 경우
+          } catch (error) {
+            return {
+              ok: false,
+              error: error.message,
+            };
+          }
+        // #5 나머지는 이메일 인증이 완료된 경우, 인증 받을 이메일이 없는 경우
+        } else {
+          return {
+            ok: false,
+            error: "사용자가 인증할 이메일이 없습니다.",
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+- 우선 작성된 이메일이 인증이 안된 것만 가능하도록 `if (user.email && !user.verifiedEmail)` 을 거친다.
+- DB 에서 기존에 저장했던 이메일은 제거하고 이메일 인증을 새로 받고 저장한다. DB 에 저장함으로써 나중에 인증 완료 과정인 `CompleteEmailVerification` 을 통해 Key 를 확인하고 인증을 완료한다. 
+- 그외 나머지는 인증이 완료되지 않은 경우이거나 인증해야할 이메일이 없는 경우다.
+
+테스트 결과는 다음과 같다.
+
+<img src="https://drive.google.com/uc?id=15MS4OmBaYiep8wz5ftWQa307uRXmaUPF" alt="Request Email Verification" width="960">
+
+----
+
+## #1.54 CompleteEmailVerification Resolver
+
+인증 요청을 하면 인증이 맞는지 확인하고 완료되었다는 이력을 남기는 작업이 필요하다.
+
+#### CompleteEmailVerification.graphql
+```graphql
+type CompleteEmailVerificationResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  CompleteEmailVerification(key: String!): CompleteEmailVerificationResponse!
+}
+```
+
+#### CompleteEmailVerification.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import Verification from "../../../entities/Verification";
+import {
+  CompleteEmailVerificationMutationArgs,
+  CompleteEmailVerificationResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    CompleteEmailVerification: privateResolver(
+      async (
+        _,
+        args: CompleteEmailVerificationMutationArgs,
+        { req },
+      ): Promise<CompleteEmailVerificationResponse> => {
+        const user: User = req.user;
+        const { key } = args;
+        // 사용자의 이메일은 있지만 인증이 완료되지 않은 경우
+        if (user.email) {
+          try {
+            // 이메일과 key 로 사용자를 찾는다.
+            const verification = await Verification.findOne({
+              key,
+              payload: user.email,
+            });
+            if (verification) {
+              user.verifiedEmail = true;
+              user.save();
+              return {
+                ok: true,
+                error: null,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "이메일을 확인할 수 없습니다.",
+              };
+            }
+          } catch (error) {
+            return {
+              ok: false,
+              error: error.message,
+            };
+          }
+        } else {
+          return {
+            ok: false,
+            error: "인증할 이메일이 없습니다.",
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+`EmailSignUp`, `RequestEmailVerification` 처럼 이메일 인증 요청이 발생했다. 인증 완료를 위해 `user.email`, `key` 를 조회해서 사용자가 있는지 확인하고, 있다면 `user.verifiedEmail = true` 로 업데이트해 인증이 완료되었음을 저장한다. 테스트 결과는 다음과 같다.
+
+<img src="https://drive.google.com/uc?id=11lQRgV9gaDOlSh_9WhrLjEXPeb-5QpwH" alt="Complete Email Verification" width="960">
+
+----
+
+## #1.56 UpdateMyProfile Resolver
+
+#### UpdateMyProfile.graphql
+```graphql
+type UpdateMyProfileResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  UpdateMyProfile(
+    firstName: String
+    lastName: String
+    email: String
+    password: String
+    profilePhoto: String
+    age: Int
+  ): UpdateMyProfileResponse!
+}
+```
+
+#### UpdateMyProfile.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import {
+  UpdateMyProfileMutationArgs,
+  UpdateMyProfileResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import cleanNullArgs from "../../../utils/cleanNullArgs";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    UpdateMyProfile: privateResolver(
+      async (
+        _,
+        args: UpdateMyProfileMutationArgs,
+        { req },
+      ): Promise<UpdateMyProfileResponse> => {
+        const user: User = req.user;
+        // null type 들을 걸러낸 나머지 인자들
+        const notNull: any = cleanNullArgs(args);
+        if (notNull.password !== null) {
+          user.password = notNull.password;
+          user.save();  // 실제로 비밀번호 업데이트 이뤄지는 부분
+          delete notNull.password; // Hashing 되지 않은 password 가 다시 저장되지 않도록 notNull.password 를 삭제
+        }
+        try {
+          await User.update({ id: user.id }, { ...notNull });
+          return {
+            ok: true,
+            error: null,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+- `User.update()` 함수에서 두번째 인자로 `{ ...args }` 를 업데이트로 넘기면 Type 에러가 난다. `null` 인 Type 들은 User Scheme 에서 충돌하기 때문이다. User Type 들은 `null` 이 없는 필수(`!`로 지정된) Type 들로 지정되어 있기 때문에 이를 위해 `null` 로 들어오는 인자들을 걸러내는 과정이 필요하다.
+- `cleanNullArgs` 으로 걸러낸 `notNull` 인자들 중에서 `password` 를 `user.password` 로 지정해 업데이트 한다.
+  ```typescript
+  const cleanNullArgs = (args: object): object => {
+    const notNull = {};
+    Object.keys(args).forEach(key => {
+        if (args[key] !== null) {
+          notNull[key] = args[key];
+        }
+      });
+    return notNull;
+  };
+
+  export default cleanNullArgs;
+  ```
+- 그러나 실제로 업데이트 되지 않는다. 왜일까? 그 이유는 `const user: User = req.user;` 에서 `user` 는 User Entity 의 Instance 가 아니기 때문이다. User Instance 란 DB 에서 선택하고 확인하며 찾은 객체 데이터를 말한다. 만약 `User.findOne()` 으로 대상을 찾아 변수에 담았다면 그것이 바로 User Instance 가 된다. 그런데 여기선 그런 과정이 없다. 이전에 User Entity 를 구성했을 때 비동기 함수인 `savePassword` 적용해 비밀번호를 Hashing 했다. 그리고 User Instance 가 생성되기 전에 작동하라는 의미로 `@BeforeUpdate` 를 적용시켰다. 그러나 실제로 `User.update()` 를 하면 사용자를 로드하지 않으며 `@BeforeUpdate` 가 원하는데로 작동하지 않는다. Typeorm 버그처럼 보이는 이 `update` 메소드는 사용자 존재 여부를 확인하지도 않으며 선택하지도 않기 때문에 `@BeforeUpdate`, `@BeforeInsert` 를 하기 위해선 존재여부를 확인하고 선택해 저장하는 `User.save()` 해야 한다. 결론적으로 `User.update()` 는 User Instance 없이도 업데이트하는 방식인 것이고 우리는 비밀번호를 다시 Hashing 하기 위해서 `User.save()` 를 해야만 했던 것이다. 어쩌면 이것으로 Typeorm 작동방식을 더 잘 알게된 기회가 되었다.
+- `delete notNull.password` 은 Hashing 되지 않은 `password` 가 다시 저장되지 않도록 `notNull.password` 를 삭제한다.
+
+테스트 결과는 다음과 같다.
+
+<img src="https://drive.google.com/uc?id=1MjvBg3-nre7dqtpQFVE0pEj29euFa7cK" alt="Update My Profile 01" width="960">
+
+<img src="https://drive.google.com/uc?id=1VysJ5FCxos6UDpiy2YB-7_CZ8s5mwZJF" alt="Update My Profile 02" width="960">
 
 ----
 
@@ -1684,6 +2088,221 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+`ToggleDrivingMode` 는 단순히 `user.isDriving = !user.isDriving` 을 해주고 상태가 변경된 것을 업데이트 하기만 하면 된다.
+
+----
+
+## #1.59 ReportMovement Resolver
+
+사용자는 위치 정보를 보내는 Resolver 가 필요하다. 이것은 운전자, 승객 둘다 요청시에 각자의 정보를 상대에게 보내는 역할을 한다. 그런데 `User` 에 위치정보나 운전모드 변경에 관련된 정보가 있는데 `UpdateMyProfile` 에서 구현하지 않는 이유는 무엇일까? 왜냐하면 경험상 하나의 Resolver 에 많은 기능을 가지고 있으면 혼란스럽고 효율성이나 유지보수가 힘들어진다. 그리고 상대가 나를 Subscription 했다면 위치정보가 변했다는 것을 알려야 한다. 나중에 Publish, Subscription 에서 다루게 될 것이다.
+
+#### ReportMovement.graphql
+```graphql
+type ReportMovementResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  ReportMovement(
+    lastOrientation: Float
+    lastLng: Float
+    lastLat: Float
+  ): ReportMovementResponse!
+}
+```
+
+#### ReportMovement.resolvers.ts
+```typescript
+import User from "../../../entities/User";
+import {
+  ReportMovementMutationArgs,
+  ReportMovementResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import cleanNullArgs from "../../../utils/cleanNullArgs";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    ReportMovement: privateResolver(
+      async (
+        _,
+        args: ReportMovementMutationArgs,
+        { req, pubSub },
+      ): Promise<ReportMovementResponse> => {
+        const user: User = req.user;
+        const notNull = cleanNullArgs(args);
+        try {
+          await User.update({ id: user.id }, { ...notNull });
+          const updatedUser = await User.findOne({ id: user.id });
+          pubSub.publish("driverUpdate", { DriversSubscription: updatedUser });
+          return {
+            ok: true,
+            error: null,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+사용자의 위치 정보들을 `arg` 에서 `null` 아닌 것만 모은 `{ ...notNull }` 로 업데이트 한다. 그리고 업데이트 된 결과가 DB 에서 다시 찾아 `"driverUpdate"` 라는 이벤트 이름으로 게시하고 구독한 측에 업데이트 된 데이터 결과를 `{ DriversSubscription: updatedUser }` 로 보낸다.
+
+----
+
+## #1.60 AddPlace Resolver
+
+`src/api/Place/` 디렉토리에 장소를 추가하는 Resolver 를 만들어보자.
+
+#### AddPlace.graphql
+```graphql
+type AddPlaceResponse {
+  ok: Boolean!
+  error: String
+}
+
+type Mutation {
+  AddPlace(
+    name: String!
+    lat: Float!
+    lng: Float!
+    address: String!
+    isFav: Boolean!
+  ): AddPlaceResponse!
+}
+```
+
+#### AddPlace.resolvers.ts
+```typescript
+import Place from "../../../entities/Place";
+import User from "../../../entities/User";
+import { AddPlaceMutationArgs, AddPlaceResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    AddPlace: privateResolver(
+      async (
+        _,
+        args: AddPlaceMutationArgs,
+        { req },
+      ): Promise<AddPlaceResponse> => {
+        const user: User = req.user;
+        try {
+          await Place.create({ ...args, user }).save();
+          return {
+            ok: true,
+            error: null,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+새로운 장소를 추가할 때 요청으로 받은 인자들은 그대로 받고 요청한 사용자를 `{ ...args, user }` 처럼 추가해 생성한다. 그리고 `Place` 와 `User` 간의 관계를 설정해야 한다. `src/api/Place/shared/Place.graphql` 에 `user` 속성을 추가한다.
+
+#### Place.graphql
+```graphql
+type Place {
+  id: Int!
+  name: String!
+  lat: Float!
+  lng: Float!
+  address: String!
+  isFav: Boolean!
+  user: User! #추가
+  createdAt: String!
+  updatedAt: String
+}
+```
+
+다음과 같이 `src/entities/Place.ts` 에도 추가한다.
+
+#### Place.ts
+```typescript
+@Entity()
+class Place extends BaseEntity {
+  
+  ...
+
+  @Column({ type: "double precision", default: 0 })
+  lng: number;
+
+  // 추가된 부분
+  @ManyToOne(type => User, user => user.places)
+  user: User;
+
+  ...
+
+}
+```
+
+Type 은 `User` 이고, User Entity 쪽에선 `user.places` 로 장소를 조회할 수 있다. 그러나 아직 User Entity 에는 `user.places` 를 조회 할 수 있는 속성이 없기 때문에 `src/entities/User.ts` 에도 추가한다.
+
+
+#### User.ts
+```typescript
+...
+
+import Place from "./Place";
+
+@Entity()
+class User extends BaseEntity {
+  
+  ...
+
+  @OneToMany(type => Ride, ride => ride.driver)
+  ridesAsDriver: Ride[];
+
+  // 추가된 부분
+  @OneToMany(type => Place, place => place.user)
+  places: Place[];
+
+  @CreateDateColumn() createdAt: string;
+  
+  ...
+
+}
+
+```
+
+`User` 측에선 `Place` 와 관계 설정을 하는 것이기 때문에 `place.user` 도 설정해주도록 한다. 마지막으로 `User.graphql` 에도 추가를 마무리 한다.
+
+```graphql
+type User {
+
+  ...
+
+  ridesAsDriver: [Ride]
+  places: [Place] # 추가된 부분
+  createdAt: String!
+  updatedAt: String
+}
+
+type Query {
+  user: User
+}
+```
+
 ----
 
 ## #1.61 EditPlace Resolver
@@ -1719,15 +2338,13 @@ const resolvers: Resolvers = {
       ): Promise<EditPlaceResponse> => {
         const user: User = req.user;
         try {
-          // typeorm 은 기본적으로 relations(@ManyToOne, @OneToMany...)을 로드하지 않는다.
-          // 그래서 두번째 인자로 옵션을 설정하기 위해 일부분(user)의 관계만 로드한다.
           const place = await Place.findOne({ id: args.placeId });
           if (place) {
             // 사용자 id 로 사용자가 즐겨찾는 장소가 맞는지 여부
             if (place.userId === user.id) {
               const notNull: any = cleanNullArgs(args);
               // Update 오류로 인해 다음과 같이 수정, ex) notNull -> { placeId: 1, isFav: true }
-              // placeId 는 수정하려고 하는 대상, Place Column 의 일부분이 아니어서 오류가 생김
+              // placeId 는 수정하려고 하는 대상이 아니다. Place Column 의 일부분이 아니어서 오류가 생김
               // 다시말해 placeId 는 찾는 대상이지 수정 대상이 아님
               if (notNull.placeId) { delete notNull.placeId; }
               await Place.update({ id: args.placeId }, { ...notNull });
@@ -1782,7 +2399,7 @@ class Place extends BaseEntity {
   // typeorm 에서는 특정 관계를 이용해 간단히 전체 속성을 로드하는 기능을 가지고 있다. 예를들면 다음과 같다.
   // @RelationId((place: Place) => Place.user)
   // userId: number;
-  // 그러나 여기서는 전체 속성을 로드하지 않을 것이기 때문에 다음과 같이 작성한다.
+  // 그러나 여기서는 전체 속성을 로드하지 않고 사용자 ID 만 필요하기 때문에 다음과 같이 한다.
   @Column({ nullable: true })
   userId: number;
 
@@ -1794,9 +2411,7 @@ class Place extends BaseEntity {
 }
 ```
 
-해당 Entity 에 `@RelationId` 를 작성하던 Resolver 구현 부분에서 `{ relations: ["user"] }` 하던 둘 중 하나만 설정해도 관계 속성을 로드하는 것은 같다.
-
-`src/api/Place/shared/Place.graphql` 에는 `userId` 속성을 추가한다.
+해당 Entity 에 `@RelationId` 를 작성하던 Resolver 구현 부분에서 `{ relations: ["user"] }` 하던 둘 중 하나만 설정해도 관계 속성을 로드하는 것은 같다. `src/api/Place/shared/Place.graphql` 에는 `userId` 속성을 추가한다. `Place` 에 `userId` 가 필요한 이유를 생각해보면 조회, 수정, 삭제를 할 때 `Place.userId === user.id` 처럼 어떤 사용자가 자신의 장소를 조회, 수정, 삭제하는 것인지 식별해야 하기 때문에 `userId` 가 필요하다.
 
 #### Place.graphql
 ```graphql
@@ -1814,7 +2429,7 @@ type Place {
 }
 ```
 
-`await Place.update({ id: args.placeId }, { ...notNull });` 에서 `update` 에러가 발생할 것이다. 예를들어 다음과 같이 `EditPlace` 로 수정을 하게된다고 하면
+`await Place.update({ id: args.placeId }, { ...notNull });` 에서 `update` 에러가 발생할 것이다. 예를들어 다음과 같이 `EditPlace` 로 수정을 하게되면
 
 ```graphql
 mutation {
@@ -1825,7 +2440,7 @@ mutation {
 }
 ```
 
-`notNull` 은 `{ placeId: 1, isFav: true }` 처럼 결과가 나오는데 에러가 나타나는 이유는 무엇일까?  그것은 바로 `placeId` 는 업데이트 대상, Place Column 의 일부분이 아니어서 오류가 생기는 것이다. 다시말해 `placeId` 는 찾는 대상이지 수정 대상이 아니다. `if (notNull.placeId) { delete notNull.placeId; }` 로 `placeId` 를 제외한 인자들만 업데이트 되도록 제거해준다.
+`EditPlace.resolvers.ts` 에서 `delete notNull.placeId` 처럼 `placeId` 를 제거한 이유는 무엇일까? `notNull` 은 `{ placeId: 1, isFav: true }` 처럼 결과가 나오는데 에러 생긴다. 그것은 바로 `placeId` 는 업데이트 대상이 아니다. 그래서 Place Column 의 일부분이 아니어서 에러가 생기는 것이다. 다시말해 `placeId` 는 찾는 대상이지 수정 대상이 아니다. 결국 `if (notNull.placeId) { delete notNull.placeId; }` 로 `placeId` 를 제외한 인자들만 업데이트 되도록 한다.
 
 ----
 
@@ -1898,10 +2513,11 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+`DeletePlace` 는 단순히 `user.id` 를 DB 에서 찾아 `Place` 에 저장된 사용자 식별자인 `userId` 와 같은지 확인하고 제거하는 작업이다.
+
 ----
 
 ## #1.63 GetMyPlaces Resolver and Testing
-
 
 #### GetMyPlaces.graphql
 ```graphql
@@ -1932,7 +2548,7 @@ const resolvers: Resolvers = {
         try {
           const user = await User.findOne(
             { id: req.user.id }, // # 인자1 찾을 조건: 요청 user.id
-            { relations: ["places"] }, // 인자2 관계 Option: user.places 관계가 있다는 것을 알려준다.
+            { relations: ["places"] }, // # 인자2 관계 Option: user.places 로 관계가 있는 장소를 찾는다.
           );
           // 해당 사용자가 있을 경우
           if (user) {
@@ -1963,9 +2579,42 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+장소 조회를 할 때 `user.id` 로 찾는데 `{ relations: ["places"] }` 으로 옵션을 설정한다. 이는 이전에 relation 명목으로 설정한 Entity 의 `@ManyToOne`, `@OneToMany` 가 작동하도록 한다. 실제로 작동하는 User Entity 는 다음과 같다.
+
+```typescript
+@OneToMany(type => Place, place => place.user)
+places: Place[];
+```
+
+결국 `user.places` 결과가 반환된다. 이제 장소를 추가하고 조회하고 수정하는 테스트를 해보자. 우선 장소를 추가한다.
+
+<img src="https://drive.google.com/uc?id=12y75D14HO2ok6jsKzLblAwyS3_Skn7Fh" alt="Testing AddPlace, EditPlace, GetMyPlaces 02" width="960">
+
+조회 해보면 방금 추가된 장소가 나온다.
+
+<img src="https://drive.google.com/uc?id=10VwurcuobFGVf_yHF4mHM_UMvahz1Atr" alt="Testing AddPlace, EditPlace, GetMyPlaces 03" width="960">
+
+장소를 하나 더 추가해보자.
+
+<img src="https://drive.google.com/uc?id=1MX4FXP3hpyl7P7TEl9k2PfVdi1NgkYE1" alt="Testing AddPlace, EditPlace, GetMyPlaces 04" width="960">
+
+역시 전체 장소 결과가 조회된다.
+
+<img src="https://drive.google.com/uc?id=1xdMrsdb8lN0TS5vtq34UjmwWnO4-mK-C" alt="Testing AddPlace, EditPlace, GetMyPlaces 05" width="960">
+
+이제는 즐겨찾기 정보를 `true` 로 업데이트 해보자.
+
+<img src="https://drive.google.com/uc?id=1Qy5ZfzRZE-Jo9IbZkKBh9YBGjyDWVQW-" alt="Testing AddPlace, EditPlace, GetMyPlaces 06" width="960">
+
+`placeId` 가  `1` 인 장소의 즐겨찾기가 `true` 로 변경된 것을 볼 수 있다.
+
+<img src="https://drive.google.com/uc?id=1LQ6BOxG3AysO_YMXSVEScG-yQdNsEP7d" alt="Testing AddPlace, EditPlace, GetMyPlaces 01" width="960">
+
 ----
 
 ## #1.64 GetNearbyDrivers Resolver
+
+고객 입장에서 운전자가 주변에 있는지 조회가 가능해야 한다.
 
 #### GetNearbyDrivers.graphql
 ```graphql
@@ -1979,6 +2628,8 @@ type Mutation {
   GetNearbyDrivers: GetNearbyDriversResponse!
 }
 ```
+
+우리는 "근처에 있다(Nearby)" 는 것을 표현해야 한다. 현재 고객의 위치에서 위도, 경도가 각각 0.05 씩 크거나 작은 경우로 범위를 산정한다.
 
 #### GetNearbyDrivers.resolvers.ts
 ```typescript
@@ -2043,20 +2694,29 @@ export class User extends BaseEntity {
 >
 > ### **Domain**
 > 
-> 속성(Column)들이 가질 수 있는 모든 값들의 집합이다. 쉽게 말해 '표현되는 속성 값의 범위(영역)'이다. 예를들어 학생 릴레이션이 있다고 한다면 학년 속성의 1학년에서 4학년 까지 범위가 도메인이다.
+> 속성(Column)들이 가질 수 있는 모든 값들의 집합이다. 쉽게 말해 '표현되는 속성 값의 범위(영역)'이다. 예를들어 학생 릴레이션이 있다고 한다면 학년 속성의 1학년에서 4학년 까지 범위가 바로 도메인이다.
 
-두 가지 모두 장단점이 있다. 개발에서 항상 명심해야 할 것은 응용 프로그램을 유지 관리하는 방법이다. Data Mapper 는 유지 관리에 용이하며 대형 앱에 유용하다. Active Record 방식은 소규모 앱에 단순하게 유지하기에 좋다.
+두 가지 모두 장단점이 있다. 개발에서 항상 명심해야 할 것은 응용 프로그램을 유지 관리하는 방법이다. Data Mapper 는 유지 관리에 용이하며 대형 앱에 유용하다. Active Record 방식은 소규모 앱에 단순하게 유지하기 좋다.
 
-그렇다면 `GetNearbyDrivers` 에서 `getRepository()` 로 Data Mapper 방식을 사용하는 이유는? 바로 사용자와 드라이버가 데이터베이스 정보를 서로 독립적으로 교류하기 위해서다. 서로 각자 프로세스가 종료되더라도 데이터에 큰 영향을 받지 않는다. 물론 `Between()` 과 같은 Typeorm 에서 지원하는 함수를 사용하려면 Data Mapper 방식을 사용해야 한다.
+그렇다면 이제 `GetNearbyDrivers` 에서 `getRepository()` 로 Data Mapper 방식을 사용하는 이유를 알 수 있다. 바로 사용자와 운전자가 데이터베이스 정보를 서로 독립적으로 교류하기 위해서다. 서로 각자 프로세스가 종료되더라도 데이터에 큰 영향을 받지 않는다. 물론 `Between()` 과 같은 Typeorm 에서 지원하는 함수를 사용하려면 Data Mapper 방식을 사용해야 한다.
 
 ----
 
 ## #1.66 DriversSubscription
 
+여기서 부터는 사용자와 운전자간에 서로의 데이터가 오고 가도록 발행(Publish)과 구독(Subscription)을 설정할 것이다.
+
 > **NOTE:**
 > 
 > ### **Publish & Subscription**
 > 
+> 정확히는 Publish–Subscribe Pattern 이라고 한다. 소프트웨어 아키텍처에서 Publish–Subscribe 은 Publisher(발행자 또는 게시자) 라는 메시지 발신자가 Subscriber(구독자 또는 가입자) 라고 하는 특정 수신자에게 메세지를 보내긴 하지만 직접 보내지는 않는다. Publisher 는 어떤 Subscriber 가 있는지 아는 바 없이 프로그래밍 된 메시지를 클래스로 분류하고 메세지를 보낸다.
+> 
+> 마찬가지로 구독자 또한 하나 이상의 클래스에 관심을 가질 수 있다. 그리고 어떤 발행자가 있는지에 대한 지식없이 관심있는 메시지만 수신하면 된다. Publish–Subscribe 은 Message Queue 개념에서 온 것이다. 그리고 일반적으로 하나의 거대한 Message-Oriented Middleware 시스템의 일부분이다.
+> 
+> 참고: https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern
+
+
 
 #### app.ts
 ```typescript
@@ -2077,7 +2737,7 @@ class App {
       context: req => {
         return {
           req: req.request,
-          pubSub: this.pubSub, // Context 로 공유된다.
+          pubSub: this.pubSub, // context 로 공유된다.
         };
       },
     });
@@ -2088,6 +2748,20 @@ class App {
 
 }
 ```
+
+이제  `graphql-yoga` 가 지원하는 Publish & Subscription 기능인 `PubSub` 을 사용할 것이다. 그러나 이것은 데모로 만 사용하고 실제로 제품화 할 때는 [Redies](https://github.com/davidyaha/graphql-redis-subscriptions), Memcached 와 같은 것들을 써야한다.
+
+`App` 클래스에서 `pubSub` 이라는 멤버 변수를 추가했다. 그리고 `this.pubSub` 은 `new` 연산자를 통해 `PubSub` 의 인스턴스를 가지고 있다. 다시 말해 `PubSub` 이라는 클래스가 있고 클래스 앞에 `new` 연산자를 사용하면 인스턴스가 생성된다는 뜻이다. `PubSub` 의 인스턴스인 `this.pubSub` 은 다시 `context` 객체를 통해 여러 Resolver 에게 전달된다. `this.pubSub.ee.setMaxListeners(99)` 는 이벤트 리스너 설정이다.
+
+> **NOTE:** 
+> 
+> ### **Constructor**
+> 
+> 클래스에서 `constructor` 는 인스턴스를 생성하고 클래스 필드를 초기화하기 위한 특수한 메소드이다.
+> 
+> ### **클래스 필드(Class Field) & 멤버 변수**
+>
+> 클래스 내부의 캡슐화된 변수를 말한다. 데이터 멤버 또는 멤버 변수라고도 부른다. 클래스 필드는 인스턴스의 프로퍼티 또는 정적 프로퍼티가 될 수 있다. 쉽게 말해, 자바스크립트의 생성자 함수에서 `this` 에 추가한 프로퍼티를 클래스 기반 객체지향 언어에서는 클래스 필드라고 부른다.
 
 #### DriversSubscription.graphql
 ```graphql
@@ -2111,39 +2785,133 @@ const resolvers = {
 export default resolvers;
 ```
 
+이제 새로운 위치의 움직임이 전달되면 사용자 정보를 업데이트 해야 한다. 그것은 `ReportMovement.resolvers.ts` 에서 담당한다.
+
+#### ReportMovement.resolvers.ts
+```typescript
+...
+
+const resolvers: Resolvers = {
+  Mutation: {
+    ReportMovement: privateResolver(
+      async (
+        _,
+        args: ReportMovementMutationArgs,
+        { req, pubSub }, // #1 context 에 pubSub 연결
+      ): Promise<ReportMovementResponse> => {
+        const user: User = req.user;
+        const notNull = cleanNullArgs(args);
+        try {
+          // #2 사용자 정보를 업데이트 할 때, 업데이트 된 사용자 정보를 다시 가져오고
+          await User.update({ id: user.id }, { ...notNull });
+          const updatedUser = await User.findOne({ id: user.id });
+          // #3 구독자에게 전달한다. 여기선 Driver 가 Passenger 에게 전달한다.
+          pubSub.publish("driverUpdate", { DriversSubscription: updatedUser });
+          return {
+            ok: true,
+            error: null,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+          };
+        }
+      },
+    ),
+  },
+};
+
+...
+```
+
+- `context` 를 통해서 `{ req, pubSub }` 처럼 `PubSub` 의 인스턴스를 가져온다.
+- `User.update( ... )` 를 통해 사용자 위치를 업데이트 하고
+- `User.findeOne( ... )` 로 업데이트 한 정보를 다시 불러온다. 다시 불러와야 하는 이유는 `User.update()` 는 수정 요청만 보내고 존재여부는 신경쓰지 않기 때문에 수정된 `User` 를 반환해 주지 않는다.
+- 그리고 그 업데이트 한 사용자 정보를 `"driverUpdate"` 라는 이벤트 리스너로 구독한 구독자들에게 전달한다. 데이터를 전달할 때 속성인 `DriversSubscription` 은 `DriversSubscription.graphql` 에서 정의된 Scheme 속성과 같아야 한다.
+
+하지만 아직 문제가 더 남아 있다. Driver 인증은 어떻게 할 것인가? 그리고 어떤 사용자가 구독을 Listening 하는지 알 수 있을까? 이대로 한다면 불필요한 광범위한 거리의 구독자까지 갈 것이다. 그래서 Driver 근처에 있는 사용자에게만 발행되도록 해야 한다. 그렇다면 그러한 정보를 걸러내는 작업이 필요하다. 그것은 다음 과정에서 다룰 것이다.
+
+테스트를 하기전에 `Subscription` 타입으로 `DriversSubscription` 을 설정한다. `DriversSubscription` 은 이벤트가 발생하면 `User` 데이터를 불러온다. 이벤트가 발생할 때 까지는 계속 Listening 상태다.
+
+<img src="https://drive.google.com/uc?id=127tjuUUMJEBVzg_e2WGhAqPkMEUvw_Bp" alt="Driver Subscription Test 01" width="960">
+
+다른 탭으로 `Mutation` 타입을 주고 `ReportMovement` 속성에서 `lat` 에 변화를 준다.
+
+<img src="https://drive.google.com/uc?id=1dEwGCvo36dwCrvsiSWkpMcCVfa94kHmZ" alt="Driver Subscription Test 02" width="960">
+
+어떤 Driver 한테서 변화가 생긴 것인지 구독한 측에 운전자 `fullName` 이 출력될 것이다.
+
+<img src="https://drive.google.com/uc?id=1m6oA0tLq_uSQPMQekL2WYsxiGnzJI2_N" alt="Driver Subscription Test 03" width="960">
+
 ----
 
 ## #1.68 Authenticating WebSocket Subscriptions
 
-누가 구독하고 있는지 인증하는게 필요하다. 왜냐하면 누가 구독하고 있는지 알아야 나중에 Publishing 할 수 있다. 우리는 Web Socket 을 통해서 인증할 것이다.
+이제 누가 구독하고 있는지 인증하는게 필요하다. 왜냐하면 누가 구독하고 있는지 알아야 나중에 Publishing(게시) 할 수 있다. 우리는 사용자간의 발행과 구독을 Web Socket 을 통해 인증할 것이다.
 
 > **NOTE:**
 >  
 > ### **Web Socket**
 >  
-> WebSocket은 서버와 클라이언트 간에 Socket Connection을 유지해서 언제든 양방향 통신(Duplex) 또는 데이터 전송이 가능하도록 하는 기술을 말한다. 쉽게 말하면 웹버전의 TCP 또는 Socket (소켓)이다.
+> WebSocket은 서버와 클라이언트 간에 Socket Connection을 유지해서 언제든 양방향 통신(Duplex) 또는 데이터 전송이 가능하도록 하는 기술을 말한다. 쉽게 말하면 웹버전의 TCP 또는 Socket (소켓)이다. WebSocket 을 제대로 알려면 Socket 이 무엇인지 알아야 한다.
 > 
 > 참고: [Web Socket 이란](http://utk-unm.blogspot.com/2016/10/websocket.html)
 > 
-> WebSocket 을 제대로 알려면 Socket 이 무엇인가를 알아야 한다.
-> 
 > ### **Socket**
 > 
-> 네트워크에 연결된 모든 장치들을 노드(Node)라고 한다. 노드 중에서도 IP 주소를 가지고 있는 것을 호스트(Host)라 한다. 호스트는 스마트폰, 노트북 그리고 서버도 해당된다. 결국 데이터는 호스트들 끼리 주고 받는 것이다.
+> 네트워크에 연결된 모든 장치들을 노드(Node)라고 한다. 노드 중에서도 IP 주소를 가지고 있는 것을 호스트(Host)라 한다. 호스트는 스마트폰, 노트북 그리고 서버도 해당된다. 데이터는 호스트들 끼리 주고 받는 것이다.
 > 
-> 그러나 실제로 호스트를 찾아가면 데이터의 종점은 프로세스다. 흔히 프로세스는 프로그램, 애플리케이션, S/W 모두를 총칭한다. 애플리케이션 안에는 여러개의 프로세스가 존재한다. 네트워크 상의 데이터 종착점은 서로 다른 프로세스들인 것이다. 다른말로 '데이터는 프로세스 레벨에서 주고 받는다'라고 말할 수 있다.
+> 그러나 실제로 호스트를 찾아갔다고 해서 끝이 아니다. 데이터의 종점은 바로 호스트 안에 프로세스다. 흔히 프로세스는 프로그램, 애플리케이션, S/W 모두를 총칭한다. 애플리케이션 안에는 여러개의 프로세스가 존재한다. 그래서 네트워크 상의 데이터 종착점은 서로 다른 프로세스들이다. 다른말로 '데이터는 프로세스 레벨에서 주고 받는다'라고 말할 수 있다.
 > 
-> 데이터가 프로세스에 잘 도착하기 위해선 여러가지 과정을 거친다. 마냥 전달한다고 받는게 아니라 정해진 절차와 규칙이 존재한다. 그 규칙들 중에 우선 호스트를 찾아가는 IP 주소가 필요하다. 주소를 잘 찾아갔다면 이제 그 호스트에 어떤 프로세스로 가야하는지 알려주는 포트(Port) 번호가 필요하다. 포트는 호스트가 내부적으로 프로세스에게 할당한 고유 값이다. 고유 값이라는 점이 중요하다. 왜냐하면 호스트 내에서 프로세스를 식별하기 위해 사용되는 값이기 때문에 같은 호스트 내에서 **서로 다른 프로세스가 같은 포트 번호를 가질 수 없기 때문이다**.
+> 데이터가 프로세스에 잘 도착하기 위해선 여러가지 과정을 거친다. 마냥 전달한다고 받는게 아니라 정해진 절차와 규칙이 존재한다. 그 규칙들 중에 우선 호스트를 찾아가는 IP 주소가 필요하다. 주소를 잘 찾아갔다면 이제 그 호스트에 어떤 프로세스로 가야하는지 알려주는 포트(Port) 번호가 필요하다. 포트는 호스트가 내부적으로 프로세스에게 할당한 고유 값이다. 고유 값이라는 점이 중요한데, 왜냐하면 호스트 내에서 프로세스를 식별하기 위해 사용되는 값이기 때문에 같은 호스트 내에서 **서로 다른 프로세스가 같은 포트 번호를 가질 수 없기 때문이다**.
 > 
-> 항해 경로를 따라 주소지 항구에 정박하고 닻을 내리면 외국인이 다음으로 찾아갈 곳은 바로 외국인 여권 심사 창구다. 여권 심사 창구에선 그가 누구고, 그가 어디서 왔고, 어떤 주소지, 어떤 방법으로 프로세스로 갈건지 확인해야지만 창구 다음으로 넘어갈 수 있다는 뜻이다. 이 창구를 소켓이라고 하며 IP 주소, 포트, 프로토콜 이렇게 3가지가 정의되어야만 열린다. 그 창구도 여러개를 가질 수 있다. 이 말은 하나의 프로세스는 수십 수만개의 소켓(창구)을 가질 수 있다는 의미다. 여기서 여권의 역할(인증)을 하는 것이 바로 프로토콜의 Header 이다.
-> 
-> 소켓은 네트워크 세계관인 OSI 7계층에서 전송계층(Transport Layer)에 해당한다. 그래서 소켓은 전송계층에서 사용하는 프로토콜이다. 대표적으로 TCP, UDP 가 있다.
+> 항해 경로를 따라 주소지 항구 도착하고 정박하면 외국인이 다음으로 찾아갈 곳은 바로 외국인 여권 심사 창구다. 여권 심사 창구에선 그가 누구고, 어디서 왔고, 어떤 주소지, 어떤 방법으로 프로세스로 갈건지 확인해야지만 창구 다음으로 넘어갈 수 있다는 뜻이다. 이 창구를 다른 말로 소켓이라고 하며 IP 주소, 포트, 프로토콜 이렇게 3가지로 정의되어야만 열린다. 창구는 여러개를 가질 수 있다. 이 말은 하나의 프로세스는 수십 수백개의 소켓(창구)을 가질 수 있다는 의미다. 여기서 여권의 역할(인증)을 하는 것이 바로 프로토콜의 Header 이다. 소켓은 네트워크 세계관인 OSI 7계층에서 전송계층(Transport Layer)에 해당한다. 그래서 소켓은 전송계층에서 사용하는 프로토콜이다. 대표적으로 TCP, UDP 가 있다.
 > 
 > 이제 Web Socket 이 무엇인지 감이 올 것이다. Web Socket 은 빠른 양방향 데이터 통신을 위해 브라우저 앱 안에서 웹 데이터가 오고가게 하는 창구인 것이다.
 > 
 > 참고: [소켓(Socket) 포트(Port) 뜻과 차이](http://blog.naver.com/PostView.nhn?blogId=myca11&logNo=221389847130&categoryNo=24&parentCategoryNo=0&viewDate=&currentPage=1&postListTopCurrentPage=1&from=postView)
 
+`index.ts` 에서 우선 App Option 을 수정해야 한다.
 
+```typescript
+...
+
+const SUBSCRIPTION_ENDPOINT: string = "/subscription";
+
+const appOptions: Options = {
+  port: PORT, // localhost:4000
+  playground: PLAYGORUND_ENDPOINT, // graphql 테스트를 위한 endpoint
+  endpoint: GRAPHQL_ENDPOINT, // graphql endpoint
+  subscriptions: {
+    path: SUBSCRIPTION_ENDPOINT,
+    onConnect: async connectionParams => {
+      const token = connectionParams["X-JWT"];
+      if (token) {
+        const user = await decodeJWT(token);
+        if (user) {
+          return {
+            currentUser: user,
+          };
+        }
+      }
+      throw new Error("No JWT. 구독이 없습니다.");
+    },
+  },
+};
+
+...
+```
+
+- `graphql-yoga` 에선 `App` 옵션 몇가지를 커스터마이즈 할 수 있는 Subscription 을 지원한다.
+- `string` 타입의 `SUBSCRIPTION_ENDPOINT` 변수에 `"/subscription"` 디렉토리 경로를 설정한다.
+- 옵션 객체인 `appOptions` 에 `subscripions` 속성을 추가하고 그 경로를 값으로 추가한다.
+- 그리고 `onConnect` 은 WebSocket 연결이 완료되면 실행할 비동기 함수다. 그런데 우리는 인증을 해야 한다. 인증을 해야할 부분이 바로 `onConnect` 이다. 그런데 `connectionParams` 는 어떤 정보가 있을까? 출력을 해보면 다음과 같다.
+  <img src="https://drive.google.com/uc?id=1qplFltAD5i62cQgyJsYOyZjPwuE4SNLI" alt="onConnect Arguments Test" width="600">
+- Token 이 출력되는데 바로 인증이라는 것을 알게된다. 이것을 Decode 하면 우리가 실제로 필요한 `currentUser` 라는 속성으로 사용자 정보를 전달하게 된다.
+
+
+`app.ts` 에서 WebSocket 으로 들어온 정보를 `context` 속성을 통해 Resolver 들에게로 전달하는 역할을 한다.
 ```typescript
 
 ...
@@ -2152,7 +2920,7 @@ class App {
   public app: GraphQLServer;
   public pubSub: any;
   constructor() {
-    this.pubSub = new PubSub(); // Publish & Subscription(발행과 구독, graphql-yoga 자체 지원)
+    this.pubSub = new PubSub(); // Publish & Subscription(게시와 예약, graphql-yoga 자체 지원)
     this.pubSub.ee.setMaxListeners(99); // 개발용 listener
     this.app = new GraphQLServer({
       schema,
@@ -2174,7 +2942,11 @@ class App {
 }
 ```
 
-`const { connection: { context = null } = {} } = req;` 은 난해해 보일 수 있다. 먼저 `const { connection: {...} } = req;` 는 `req.connection = {...}` 과 같다. 그런데 `connection` 이 없을 수 있는 경우를 생각해 빈 객체 `req.connection = {}` 를 Default 값으로 넣는다. 
+`context` 속성에 `req` 인자로 들어오는 객체가 무엇인지 `console.log(req);` 처럼 출력을 해본다면 우리가 무엇을 할 것인지 의도가 명확해진다.
+
+<img src="https://drive.google.com/uc?id=1zu_BARSgHYWbar7HDZAYDug4qJ2KWbom" alt="Request Connection Context" width="560">
+
+결국 `connection` 은 WebSocket 이라는 것을 알게된다. 그런데 `const { connection: { context = null } = {} } = req;` 은 난해해 보인다. 먼저 `const { connection: {...} } = req;` 는 `req.connection = {...}` 과 같다. 그런데 `connection` 이 없을 수 있는 경우를 생각해 빈 객체 `req.connection = {}` 를 Default 값으로 넣는다. 
 
 여기에 `const { connection: { context: {...} } } = req;` 까지 붙으면 `req.connection.context = {...}` 이 된다. 그러나 `req.connection` 안에 `context` 가 없을 수 있다. 그래서 `req.connection.context = null` 과 같은 효과를 내기 위해 `{ context = null }` 을 Default 값으로 넣은 것이다.
 
@@ -2193,7 +2965,7 @@ class App {
 
 ## #1.70 Filtering Subscription Messages
 
-사용자의 상태에 따라 발행을 달리해야 한다. 그러기 위해 `graphql-yoga` 에 내장된 `withFilter()` 함수를 사용할 것이다. `withFilter()` 는 해당 구독을 통해 필요한 정보만 필터해 가공한다. 그리고 전달 여부를 `true`, `false` 로 반환한다.
+사용자의 상태에 따라 게시(Publish)를 달리해야 한다. 그러기 위해 `graphql-yoga` 에 내장된 `withFilter()` 함수를 사용할 것이다. `withFilter()` 는 해당 예약을 통해 필요한 정보만 필터해 가공한다. 그리고 전달 여부를 `true`, `false` 로 반환한다.
 
 #### DriversSubscription.resolvers.ts
 ```typescript
@@ -2205,7 +2977,7 @@ const resolvers = {
       subscribe: withFilter(
         (_, __, { pubSub }) => pubSub.asyncIterator("driverUpdate"),
         (payload, _, { context }) => {
-          console.log(`ReportMovement Resolver 로부터 온 정보:`, payload);
+          console.log(`ReportMovement Resolver 로 부터 온 정보:`, payload);
           console.log(`Listening`, context);
           return true; // true, false 냐에 따라 Subscription 을 전달하거나 안할 수 있다.
         },
@@ -2221,10 +2993,11 @@ export default resolvers;
 
 <img src="https://drive.google.com/uc?id=1qpfMHJOAqsBXhf7fNvwplZKtWu3nNGH6" alt="Driver Subscription Console.log Result" width="560">
 
-이제 `payload`, `context` 를 활용해 필요한 데이터 전달을 구독한 쪽으로 전달해 보자.
+- `payload` 는 `ReportMovement` 로 부터 채널인 `"driverUpdate"` 가 작동하면서 운전자 위치 데이터가 들어온다.
+- `context` 는 구독한 탑승자 위치 데이터이다(단, 현재 테스트 단계에선 운전자와 탑승자 정보가 동일하다).
+- 이 두개의 정보를 활용해 `DriverSubscription` 구독자는 자신과 운전자의 위치가 근처에 있는지 여부를 판단하도록 할 것이다.
 
 ```typescript
-// 여기서는 운전자를 구독한 측, 바로 탑승자 측에서 해야할 이벤트, 즉 운전자와 근접한지 여부를 전달한다.
 import { withFilter } from "graphql-yoga";
 import User from "../../../entities/User";
 
@@ -2232,8 +3005,7 @@ const resolvers = {
   Subscription: {
     DriversSubscription: {
       subscribe: withFilter(
-        // ReportMovement(발행된 쪽)에서 구독한 채널을 받아 업데이트 실행되는 구간
-        // pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 탑승자 위치를 알기 위해 가져옴
+        // pubSub 인자는 구독을 위해 가져왔고, payload 는 운전자 위치, context 는 탑승자 위치를 알기 위해 가져옴(단, 현재 운전자와 탑승자 정보가 동일함)
         (_, __, { pubSub }) => pubSub.asyncIterator("driverUpdate"),
         (payload, _, { context }) => {
           const user: User = context.currentUser;
@@ -2261,8 +3033,8 @@ const resolvers = {
 export default resolvers;
 ```
 
-- 자세히 보면 구독하는 쪽에선 Resolvers Type 을 정의하지 않았다. 여기서는 `Mutation` 이 아니고 `Subscription` 이기 때문에 하면 안된다.
-- 운전자, 사용자의 근접 위치를 비교해, 위도 좌우로 0.05 씩, 경도 상하로 0.05 씩 직사각형 범위에 있는지 여부를 판단해 `true`, `false` 를 반환한다.
+- `withFilter()` 함수는 첫번째 인자로 구독을 받는다. 그리고 그 구독은 `asyncIterator` 함수를 사용한다. 두번째 인자는 필터 함수다. 실제로는 사용자에게 근처에 운전자가 있는지 여부를 전달한다. 자세히 보면 운전자, 사용자의 근접 위치를 비교해, 위도, 경도 상하좌우로 0.05 씩 직사각형 범위에 있는지 여부를 판단해 `true`, `false` 를 반환한다.
+- 자세히 보면 예약하는 쪽에선 Resolvers Type 을 정의하지 않았다. 여기서는 `Mutation` 이 아니고 `Subscription` 이기 때문에 하면 안된다.
 
 일단 새로운 `User`를 운전자로 만들어 테스트 해보자.
 
@@ -2280,13 +3052,19 @@ export default resolvers;
 
 <img src="https://drive.google.com/uc?id=1QzZIlrej0GYZSyC2gQrUfsM1sJHOjFLM" alt="Driver Subscription Test 04" width="960">
 
-0.05 이하, 이상으로 차이나는 것일 경우만 DriversSubscription 이 작동한다.
+0.05 내외로 차이나는 것일 경우만 `DriversSubscription` 이 작동한다.
 
 <img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 05" width="960">
+
+만일 `lastLat`, `lastLng` 각각 0.05 를 훨씬 벗어나는 값으로 작동시키면 다음과 같이 반응이 없다.
+
+<img src="https://drive.google.com/uc?id=17oUrLmv_tZZbUd1alXpbHB80W5EPmHB9" alt="Driver Subscription Test 06" width="960">
 
 ----
 
 ## #1.72 RequestRide Resolver
+
+예를들어 승객이 운전자에게 탑승 할려면 우선 탑승 요청을 해야 할 것이다. 그리고 탑승은 운전자로써 탑승인지 승객으로써 탑승인지 여부에 따라 달라질 것이다. 이전에 User Entity 에서 `isDriving`, `isRiding` 을 설정했다. 바로 이것으로 나중에 누가 탑승한 것인지 판별할 것이다.
 
 #### RequestRide.graphql
 ```graphql
@@ -2310,6 +3088,40 @@ type Mutation {
   ): RequestRideResponse!
 }
 ```
+
+우선 `Ride.ts` 에서 수정해야 할 부분이 있다.
+
+```typescript
+...
+
+@Entity()
+class Ride extends BaseEntity {
+  @PrimaryGeneratedColumn() id: number;
+
+  @Column({
+    type: "text",
+    enum: ["ACCEPTED", "FINISHED", "CANCELED", "REQUESTING", "ONROUTE"],
+    default: "REQUESTING",
+  })
+  status: rideStatus;
+
+  ...
+
+  // 다수의 Ride(승객)는 한명의 User(passenger, driver)를 갖는다.
+  @ManyToOne(type => User, user => user.ridesAsPassenger)
+  passenger: User;
+  // Ride 를 요청할 시에는 아직 Driver 가 할당되지 않은 상태기 때문에 nullable 을 설정한다.
+  @ManyToOne(type => User, user => user.ridesAsDriver, { nullable: true })
+  driver: User;
+
+  @CreateDateColumn() createdAt: string;
+  @UpdateDateColumn() updatedAt: string;
+}
+
+...
+```
+
+두번째 `@ManyToOne` 에서 `{ nullable: true }` 를 한 이유는 탑승 요청시에는 아직 운전자가 할당되지 않은 상태일 것이기 때문이다. 그렇다면 첫번째 `@ManyToOne` 에서 `passenger` 는 그런 설정이 없는 이유는 무엇일까? 승객은 항상 있을 것이기 때문에 `nullable` 을 안해도 되는 것이다.
 
 #### RequestRide.resolvers.ts
 ```typescript
@@ -2353,26 +3165,28 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+`RequestRide` Resolver 는 간단하다. 탑승 요청시 새로운 탑승자를 만들고 그 사용자 정보를 DB 에 저장한다.
+
 ----
 
-## #1.73 GetNearbyRides Resolver
+## #1.73 GetNearbyRide Resolver
 
-운전자(`Driver`)는 앱을 처음으로 실행하면 주변에 탑승자(`Ride`)들 여부를 알아야 한다. 그래서 운전자가 주변에 탑승자들의 여부를 요청하는 함수를 만들어야 한다. 그것을 `GetNearbyRides` 로 만들어 보자.
+운전자는 앱을 처음으로 실행하면 주변에 탑승자들 여부를 알아야 한다. 그래서 운전자가 주변에 탑승자들이 있는지 여부를 요청하는 함수를 만들어야 한다. `GetNearbyRide` 구성은 다음과 같다.
 
-#### GetNearbyRides.graphql
+#### GetNearbyRide.graphql
 ```graphql
-type GetNearbyRidesResponse {
+type GetNearbyRideResponse {
   ok: Boolean!
   error: String
   rides: [Ride]
 }
 
 type Query {
-  GetNearbyRides: GetNearbyRidesResponse!
+  GetNearbyRide: GetNearbyRideResponse!
 }
 ```
 
-#### GetNearbyRides.resolvers.ts
+#### GetNearbyRide.resolvers.ts
 ```typescript
 import { Between, getRepository } from "typeorm";
 import Ride from "../../../entities/Ride";
@@ -2429,11 +3243,14 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+- `Between()` 함수를 사용하기 위해 `getRepository()` 로 `Ride` 를 찾는다.
+- 찾을 때는 탑승 요청이 있는 `"REQUESTING"` 인 경우, 그리고 픽업이 가능한 좌표 근처를 `Between` 함수를 이용한다.
+
 ----
 
 ## #1.74 NearbyRideSubscription
 
-운전자 입장에서도 주변에 탑승자가 있는지 여부를 알아야 한다. 여기선 그것을 `NearbyRideSubscription` 로 구현해 보자.
+운전자는 주변에 승객들에게 탑승 요청을 받아야 한다. 운전자가 픽업 가능한 구역에서 탑승 요청을 받는 `NearbyRideSubscription` 을 구현해 보자.
 
 #### NearbyRideSubscription.graphql
 ```graphql
@@ -2453,7 +3270,7 @@ const resolvers = {
       subscribe: withFilter(
         (_, __, { pubSub }) => pubSub.asyncIterator("rideRequest"),
         async (payload, _, { context }) => {
-          // 이 경우엔 Driver 가 User 이다.
+          // 이 User 경우엔 Driver 이다.
           const user: User = context.currentUser;
           const {
             NearbyRideSubscription: { pickUpLat, pickUpLng },
@@ -2475,7 +3292,7 @@ const resolvers = {
 export default resolvers;
 ```
 
-이제 탑승자 여부를 요청하는 쪽에서 발행이 가능하도록 설정해보도록 하자. `RequestRide.resolvers.ts` 에서 `rideRequest` 리스너와 보낼 데이터를 연결한다.
+`RequestRide` 의 역할은 탑승 가능한 주변 승객들의 정보를 구독한 측으로 보낸다. 즉, 운전자에게 주변 승객 정보를 전달한다. 그렇다면 `RequestRide` 는 발행하는 쪽이고 운전자 측이 구독한 측이 될 것이다. `NearbyRideSubsciption` 은 그 정보를 받는데 모든 정보를 받지 않고 운전자가 픽업이 가능한 지역의 정보만 걸러낸다. `RequestRide.resolvers.ts` 에서 `rideRequest` 로 Listening 하고 보낼 승객 데이터를 연결한다.
 
 #### RequestRide.resolvers.ts
 ```typescript
@@ -2487,22 +3304,32 @@ const resolvers: Resolvers = {
       async (
         _,
         args: RequestRideMutationArgs,
-        { req, pubSub }, // pubSub 추가
+        { req, pubSub },
       ): Promise<RequestRideResponse> => {
         const user: User = req.user;
-        try {
-          const ride = await Ride.create({ ...args, passenger: user }).save();
-          // rideRequest 발행
-          pubSub.publish("rideRequest", { NearbyRideSubscription: ride });
-          return {
-            ok: true,
-            error: null,
-            ride,
-          };
-        } catch (error) {
+        // 사용자가 탑승중이 아닌 경우에만 탑승이 가능하도록, 중복 탑승은 없다.
+        if (!user.isRiding) {
+          try {
+            const ride = await Ride.create({ ...args, passenger: user }).save();
+            pubSub.publish("rideRequest", { NearbyRideSubscription: ride });
+            user.isRiding = true; // 사용자가 탑승 중임을 기억
+            user.save();
+            return {
+              ok: true,
+              error: null,
+              ride,
+            };
+          } catch (error) {
+            return {
+              ok: false,
+              error: error.message,
+              ride: null,
+            };
+          }
+        } else {
           return {
             ok: false,
-            error: error.message,
+            error: "중복 탑승 요청은 할 수 없습니다.",
             ride: null,
           };
         }
@@ -2514,21 +3341,31 @@ const resolvers: Resolvers = {
 ...
 ```
 
-이렇게 탑승 요청을 발행한 측에선 탑승자 정보를 전달하고 구독한 측인 Driver 는 탑승자의 위치가 주변에 있는지 여부를 알게 된다.
+이렇게 탑승 요청은 구독한 측으로 탑승자 정보를 전달하고 또 다른 측인 운전자는 탑승자의 위치가 주변에 있는지 여부를 알게 된다.
 
 ----
 
 ## #1.75 Testing the NearbyRideSubscription
 
+`NearbyRideSubscription` 속성으로 주변 가까운 승객들을 `id` 로 찾는다. `NearbyRideSubscription` 는 운전자 측이다. Play 버튼을 누르면 Listening... 상태가 된다. 즉, 이벤트가 발생하길 기다리고 있다.
+
 <img src="https://drive.google.com/uc?id=16g0IkyqJnDTdjmz6F7RL-LfO-qxmwK_h" alt="Nearby Ride Subscription 01" width="960">
+
+`RequestRide` 는 사용자(승객) 측이다. 사용자 측에서 픽업 장소나 드롭 장소 등의 정보를 전달한다.
 
 <img src="https://drive.google.com/uc?id=1tumconDE9i7Y1f-jQQX0IO9tungsCp1i" alt="Nearby Ride Subscription 02" width="960">
 
+`NearbyRideSubscription` 로 다시 돌아오면 주변에 탑승 요청이 들어온 것을 이벤트가 감지하고 운전자에게 승객 `id` 를 출력한다. 
+
 <img src="https://drive.google.com/uc?id=1BMG8YjtGUiHKVWMmnHByWLNGdr6P45zr" alt="Nearby Ride Subscription 03" width="960">
+
+요청을 받고 탑승을 했다면 `isRiding = true` 가 될 것이다. 그래서 중복 탑승이 되지 않고 탑승 요청을 할 수 없다.
 
 ----
 
 ## #1.76 UpdateRideStatus Resolver
+
+이제 운전자로서 탑승 요청을 한다면 탑승 상태를 바꿀 Resolver 를 작성해보자.
 
 ```graphql
 type UpdateRideStatusResponse {
@@ -2552,9 +3389,11 @@ type Mutation {
 }
 ```
 
+`UpdateRideStatus` 는 열거형(`enum`) Type 인 `StatusOptions` 을 가지고 있다. 상태에 따라 업데이트 옵션을 변경할 것인데, 수락(`ACCEPTED`), 완료(`FINISHED`), 취소(`CANCELED`), 요청중(`REQUESTING`), 가는중(`ONROUTE`) 등의 상태가 있다. 이 옵션들은 이미 Ride Entity 가 있는 `Ride.ts` 에 정의해논 것들이다. 그외 다른 것들을 넣으면 작동하지 않는다.
+
 > **NOTE:**
 > 
-> ### **열거형(enumerated type)**
+> ### **열거형(Enumerated Type)**
 > 
 > Enum은 열거형이라고 불리며, 서로 연관된 상수들의 집합을 의미한다.
 
@@ -2564,6 +3403,7 @@ type Mutation {
 export type StatusOptions = "ACCEPTED" | "FINISHED" | "CANCELED" | "REQUESTING" | "ONROUTE";
 ```
 
+#### UpdateRideStatus.resolvers.ts
 ```typescript
 import Ride from "../../../entities/Ride";
 import User from "../../../entities/User";
@@ -2583,19 +3423,18 @@ const resolvers: Resolvers = {
         { req },
       ): Promise<UpdateRideStatusResponse> => {
         const user: User = req.user;
-        // 사용자가 운전중인 경우, 즉 사용자가 Driver 인 경우
-        // 운전자(Driver)가 탑승한(Ride) 경우와 승객(Passenger)이 탑승한 경우를 따져야 함
+        // 사용자가 Driver 인 경우, 운전자(Driver)가 탑승한(Ride) 경우와 승객(Passenger)이 탑승한 경우를 따져야 함
         if (user.isDriving) {
           try {
             let ride: Ride | undefined;
-            // Driver 가 탑승을 승인(ACCEPTED)할 경우, 기존 상태는 요청(REQUESTING) 상태야 한다.
+            // Driver 가 탑승을 승인(ACCEPTED)할 경우
             if (args.status === "ACCEPTED") {
               ride = await Ride.findOne({
                 id: args.rideId,
-                status: "REQUESTING",
+                status: "REQUESTING", // 중복 수락이 되지 않도록 요청중인 상태로 변경해야 한다.
               });
               if (ride) {
-                // 이제 사용자는 Driver 입장이 된다. 사용자 상태 업데이트/저장
+                // 탑승 사용자는 운전자로서 결정되고 저장된다.
                 ride.driver = user;
                 user.isTaken = true;
                 user.save();
@@ -2606,6 +3445,7 @@ const resolvers: Resolvers = {
                 driver: user,
               });
             }
+            // 이제 탑승 상태 변경이 들어오면
             if (ride) {
               ride.status = args.status;
               ride.save();
@@ -2639,6 +3479,11 @@ const resolvers: Resolvers = {
 export default resolvers;
 ```
 
+- `UpdateRideStatus` 라는 요청이 들어오면 수락, 취소, 종료 등 상태로 변경할 수 있다. 먼저 `if (user.isDriving)` 처럼 운전자로서 탑승 요청을 받을 경우 상태를 변경하는 조건을 만난다. 그외는 승객이기 때문에 "당신은 운전자가 아닙니다." 라는 메세지를 보낸다.
+- 운전자로서 `if (args.status === "ACCEPTED")` 처럼 수락 요청을 받았다면 중복 수락을 피하기 위해 탑승 상태 또한 `"REQUESTING"` 으로 변경해야 한다. 그리고 그외 상태 경우는 이미 수락을 받고 운행중인 경우기 때문에 현재 운전자를 전달한다.
+- 운전자로서 수락된 경우 `if (ride)` 조건 안으로 탑승 요청자가 운전자로서 결정되었다는 것을 `user.isTaken = true` 처럼 DB에 저장한다.
+- 이제 운전자로서 탑숭이 수락된 이후는 이외 상태들은 완료(`FINISHED`), 취소(`CANCELED`), 가는중(`ONROUTE`) 일 것이다. 운전자의 나머지 탑승 상태들은 `if (ride)` 를 거쳐 `ride.status = args.status` 처럼 변경될 것이다.
+
 ----
 
 ## #1.78 GetRide Resolver
@@ -2656,7 +3501,7 @@ type Query {
 }
 ```
 
-### GetRide.resolvers.ts
+#### GetRide.resolvers.ts
 ```typescript
 import Ride from "../../../entities/Ride";
 import User from "../../../entities/User";
@@ -2690,7 +3535,7 @@ const resolvers: Resolvers = {
           } else {
             return {
               ok: false,
-              error: "탑승을 찾을 수 없습니다.",
+              error: "탑승자를 찾을 수 없습니다.",
               ride: null,
             };
           }
@@ -2708,6 +3553,26 @@ const resolvers: Resolvers = {
 
 export default resolvers;
 ```
+
+- `GetRide` 로 사용자가 Driver 인지 아니면 Passenger 인지 여부를 판단해 넘겨줘야 한다. 우선 인자로 받은 `args.rideId` 를 Ride Entity 에서 조회한다.
+- `if (ride)` 로 조회된 것이 확인되면 그 사용자가 누구인지 `if (ride.passengerId === user.id || ride.driverId === user.id)` 처럼 판단한다. 여기서 다음과 같이 관계 연산을 통해 `ride.passenger.id` 나 `ride.driver.id` 처럼 할 수도 있지만 이것은 데이터베이스 부분에서 처리하기에 무거워진다. 우리는 다른 방법인 `ride.passengerId`, `ride.driverId` 속성을 따로 만들어 사용자를 찾는다.
+  ```typescript
+  ...
+  try {
+    const ride = await Ride.findOne({
+      id: args.rideId,
+      { relations: ["passenger", "driver"] }
+    });
+    if (ride) {
+      if (ride.passenger.id === user.id || ride.driver.id === user.id) {
+        ...
+      }
+    }
+  } catch(error) {
+    ...
+  }
+  ```
+- 해당 `id` 가 어느 누구도 아니라면 인증된 사용자가 아니거나 탑승을 하지 않은 사용자다.
 
 #### Ride.ts
 ```typescript
@@ -2739,6 +3604,8 @@ class Ride extends BaseEntity {
 }
 ```
 
+위에서 `ride.passengerId`, `ride.driverId` 속성을 사용했는데 `Ride.ts` 에도 그에 맞는 속성을 추가해야 한다. 그리고 다음과 같이 `passengerId` 나 `driverId` 처럼 설정하면 Typeorm 이 자동으로 데이터베이스를 보지 않고도 `id`를 붙여서 반환해 준다.
+
 #### Ride.graphql
 ```graphql
 type Ride {
@@ -2754,10 +3621,301 @@ type Ride {
   distance: String!
   duration: String!
   driver: User!
-  driverId: Int! # 추가된 부분
+  driverId: Int # 추가된 부분
   passenger: User!
   passengerId: Int! # 추가된 부분
   createdAt: String!
   updatedAt: String
 }
+```
+
+`passengerId` 는 필수지만 `driverId` 는 없을 때도 있으니 필수가 아니다. 테스트 한 결과는 다음과 같이 나온다.
+
+<img src="https://drive.google.com/uc?id=1lVKwBy37xTsDU3VdlIwfVu_-wsxMykCx" alt="Get Ride Result"  width="960">
+
+----
+
+## #1.79 RideStatusSubscription
+
+앞서 만든 `UpdateRideStatus` 를 테스트 해보자. `RequestRide` 의 JWT Header 를 그대로 가져와 다음과 같이 실행한다. 참고로 `RequestRide` 는 승객 측에서 요청한다.
+
+<img src="https://drive.google.com/uc?id=1-siKr4pOcwD76xWueGXTu3bBC8ujxPLJ" alt="UpdateRideStatus Test 01" width="960">
+
+결과는 "당신은 운전자가 아닙니다." 라는 결과로 출력된다. 왜 "당신은 운전자가 아닙니다." 라고 나온 것일까? 결과적으로 이 `UpdateRideStatus` 는 승객 측 사용자가 탑승 상태를 변경한 것이다. 자세히 보면 `rideId: 2` 는 운전자의 식별자이다. 그런데 JWT Header 는 승객 측의 것이고 탑승 상태 변경을 요청한 것이기 때문에 상태를 변경할 수 없다고 나온다. 흥미롭게도 `rideId` 는 운전자로 등록되어있는 식별자인데 JWT Header 는 승객의 것이다.
+
+<img src="https://drive.google.com/uc?id=1UoHWgiwtOMsWjEIOq3IhbdZUa4LGmcKw" alt="UpdateRideStatus Test 02" width="960">
+
+그래서 승객의 JWT Header 가 아니라 운전자의 JWT Header 로 변경해 다시 상태 변경 요청을 해보자. 그러니 정상적으로 변경되었다고 출력된다. 최종적으로 `GetRide` 로 운전자 측 사용자가 제대로 적용되었는지 확인한다.
+
+<img src="https://drive.google.com/uc?id=18DYviADYhEUTMQkWOkQ8spgVvv38ZKXq" alt="UpdateRideStatus Test 03" width="960">
+
+테스트 결과는 다음과 같은 사실을 알려준다.
+- `UpdateRideStatus` 는 운전자나 승객 모두 탑승 상태를 변경하는데 요청이 들어올 수 있다.
+- 사용자는 운전자나 승객이 될 수 있다. 그래서 `rideId` 가 같을 수 있다. 그러나 어떤 JWT Header 냐에 따라 운전자인지 승객인지 구분된다.
+- 우리가 작성한 `UpdateRideStatus` 는 잘 작동하고 있으며 운전자인지 승객인지를 식별해 운전자에게만 데이터 상태 변경을 개별적으로 전달한다.
+
+이제 우리는 Ride Status 를 받아보기 위한 Subscription 을 작성해보자.
+
+#### RideStatusSubscription.graphql
+```graphql
+type Subscription {
+  RideStatusSubscription: Ride
+}
+```
+
+#### RideStatusSubscription.resolvers.ts
+```typescript
+import { withFilter } from "graphql-yoga";
+import User from "../../../entities/User";
+
+const resolvers = {
+  Subscription: {
+    RideStatusSubscription: {
+      subscribe: withFilter(
+        (_, __, { pubSub }) => pubSub.asyncIterator("rideUpdate"),
+        async (payload, _, { context }) => {
+          const user: User = context.currentUser;
+          // payload 는 driverId, passengerId 를 담고 있다.
+          const {
+            RideStatusSubscription: { driverId, passengerId },
+          } = payload;
+          return user.id === driverId || user.id === passengerId;
+        },
+      ),
+    },
+  },
+};
+
+export default resolvers;
+```
+
+`payload` 는 `RideStatusSubscription.graphql` 에서 Subscription Type 으로 정의된 `RideStatusSubscription: Ride` 속성을 알고 있다. 결국 `Ride` 를 가져오면 거기에 `driverId`, `passengerId` 가 담겨져 있을 것이다.
+
+#### UpdateRideStatus.resolvers.ts
+```typescript
+...
+
+const resolvers: Resolvers = {
+  Mutation: {
+    UpdateRideStatus: privateResolver(
+      async (
+        _,
+        args: UpdateRideStatusMutationArgs,
+        { req, pubSub },
+      ): Promise<UpdateRideStatusResponse> => {
+        const user: User = req.user;
+        if (user.isDriving) {
+          try {
+            let ride: Ride | undefined;
+            if (args.status === "ACCEPTED") {
+              ...
+            } else {
+              ...
+            }
+            if (ride) {
+              ride.status = args.status;
+              ride.save();
+              // # rideUpdate 리스너 추가
+              pubSub.publish("rideUpdate", { RideStatusSubscription: ride });
+              return {
+                ok: true,
+                error: null,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "승차를 업데이트 할 수 없습니다.",
+              };
+            }
+          } catch (error) {
+            ...
+          }
+        } else {
+          ...
+        }
+      },
+    ),
+  },
+};
+
+...
+```
+
+이제 테스트를 해보자. `RideStatusSubscription` 탭을 새로 만들고 Listening 을 걸어둔다.
+
+<img src="https://drive.google.com/uc?id=1jRZ1fNtjjbZdooouKs3PwC2myNqJAiC2" alt="Test RideStatusSubscription 01" width="960">
+
+`UpdateRideStatus` 탭에서 `status` 인자를 `CANCELED` 로 변경해 실행한다.
+
+<img src="https://drive.google.com/uc?id=1YhvfZCv3pMxqEDpZwEAVeTslTgG_LBp4" alt="Test RideStatusSubscription 02" width="960">
+
+`RideStatusSubscription` 탭에서 변경된 `CANCELED` 결과가 바로 나온 것을 볼 수 있다.
+
+<img src="https://drive.google.com/uc?id=1-ET7A7llithRwYWL7n_QcKa0ydl7mLOD" alt="Test RideStatusSubscription 03" width="960">
+
+----
+
+## #1.81 Creating a ChatRoom
+
+채팅방을 만들기 전에 먼저 앞서 만들었던 코드에서 수정해야 할 것들이 있다. 우선 `src/entities/Chat.ts` 를 수정해야 한다.
+
+#### Chat.ts
+```typescript
+import {
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne, // # 추가된 부분
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import Message from "./Message";
+import User from "./User";
+
+@Entity()
+class Chat extends BaseEntity {
+  @PrimaryGeneratedColumn() id: number;
+
+  @OneToMany(type => Message, message => message.chat)
+  messages: Message[];
+
+  // # 수정된 부분
+  @Column({ nullable: true })
+  passengerId: number;
+
+  // 다수의 Chat은 하나의 User(Passenger, Driver)를 가진다.
+  @ManyToOne(type => User, user => user.chatsAsPassenger)
+  passenger: User;
+
+  @Column({ nullable: true })
+  driverId: number;
+
+  @ManyToOne(type => User, user => user.chatsAsDriver)
+  driver: User;
+  // # 여기까지 수정/추가됨
+
+  @CreateDateColumn() createdAt: string;
+
+  @UpdateDateColumn() updatedAt: string;
+}
+
+export default Chat;
+```
+
+채팅방안에는 각각 승객이나 드라이버로서 채팅을 하는 사용자가 존재할 것이다. 그 개별적인 사용자들은 각각 `id` 로 식별하기 위해 `passengerId`, `driverId` 를 부여했다. 다음은 `src/entities/User.ts` 를 수정해야 한다.
+
+#### User.ts
+```typescript
+...
+
+@Entity()
+class User extends BaseEntity {
+
+  ...
+
+  @Column({ type: "text", nullable: true })
+  fbID: string;
+
+  // # 수정된 부분
+  // 한명의 User는 다수의 Chat 상대(passenger, driver)가 있다.
+  @OneToMany(type => Chat, chat => chat.passenger)
+  chatsAsPassenger: Chat[];
+
+  @OneToMany(type => Chat, chat => chat.driver)
+  chatsAsDriver: Chat[];
+  // # 여기까지 수정/추가됨
+
+  @OneToMany(type => Message, message => message.user)
+  messages: Message[];
+
+  ...
+  
+}
+
+...
+```
+
+`User.ts` 에서는 `@OneToMany` 로 한명의 사용자가 다수의 `Chat` 상대를 가질 수 있게 한다. 대화상대가 운전자이거나 승객일 수 있다. 지금까지 이렇게 수정한 이유는 새로운 채팅방을 만들고 `Chat` 에 사용자를 추가하기에 더 좋기 때문이다. 마지막으로 User.graphql, Chat.graphql 도 수정해줘야 한다.
+
+#### User.graphql
+```graphql
+type User {
+  ...
+
+  fbID: String
+  chatsAsPassenger: [Chat] # 수정
+  chatsAsDriver: [Chat] # 수정
+  messages: [Message]
+
+  ...
+}
+
+...
+```
+
+#### Chat.graphql
+```graphql
+type Chat {
+  id: Int!
+  messages: [Message]
+  passengerId: Int # 수정
+  passenger: User # 수정
+  driverId: Int # 수정
+  driver: User # 수정
+  createdAt: String!
+  updatedAt: String
+}
+```
+
+이제 본격적으로 채팅방을 만들기 전에 언제 채팅방을 만들어야 할까? 바로 운전자가 Ride 를 수락했을 때 만든다.
+
+```typescript
+import Chat from "../../../entities/Chat";
+...
+
+const resolvers: Resolvers = {
+  Mutation: {
+    UpdateRideStatus: privateResolver(
+      async (
+        _,
+        args: UpdateRideStatusMutationArgs,
+        { req, pubSub },
+      ): Promise<UpdateRideStatusResponse> => {
+        const user: User = req.user;
+        // 사용자가 Driver 인 경우, 운전자(Driver)가 탑승한(Ride) 경우와 승객(Passenger)이 탑승한 경우를 따져야 함
+        if (user.isDriving) {
+          try {
+            let ride: Ride | undefined;
+            // Driver 가 탑승을 승인(ACCEPTED)할 경우
+            if (args.status === "ACCEPTED") {
+              ride = await Ride.findOne(
+                {
+                  id: args.rideId,
+                  status: "REQUESTING", // 중복 수락이 되지 않도록 요청중인 상태로 변경해야 한다.
+                },
+                { relations: ["passenger"] },
+              );
+              if (ride) {
+                // 탑승 사용자는 운전자로서 결정되고 저장된다.
+                ride.driver = user;
+                user.isTaken = true;
+                user.save();
+                // 운전자가 탑승을 수락했기 때문에 새로운 채팅방이 생성된다.
+                await Chat.create({
+                  driver: user,
+                  passenger: ride.passenger,
+                }).save();
+              }
+            
+            ...
+            
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
 ```
