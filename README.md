@@ -2022,6 +2022,7 @@ export default resolvers;
 
 - `User.update()` 함수에서 두번째 인자로 `{ ...args }` 를 업데이트로 넘기면 Type 에러가 난다. `null` 인 Type 들은 User Scheme 에서 충돌하기 때문이다. User Type 들은 `null` 이 없는 필수(`!`로 지정된) Type 들로 지정되어 있기 때문에 이를 위해 `null` 로 들어오는 인자들을 걸러내는 과정이 필요하다.
 - `cleanNullArgs` 으로 걸러낸 `notNull` 인자들 중에서 `password` 를 `user.password` 로 지정해 업데이트 한다.
+  
   ```typescript
   const cleanNullArgs = (args: object): object => {
     const notNull = {};
@@ -2906,7 +2907,7 @@ const appOptions: Options = {
 - `graphql-yoga` 에선 `App` 옵션 몇가지를 커스터마이즈 할 수 있는 Subscription 을 지원한다.
 - `string` 타입의 `SUBSCRIPTION_ENDPOINT` 변수에 `"/subscription"` 디렉토리 경로를 설정한다.
 - 옵션 객체인 `appOptions` 에 `subscripions` 속성을 추가하고 그 경로를 값으로 추가한다.
-- 그리고 `onConnect` 은 WebSocket 연결이 완료되면 실행할 비동기 함수다. 그런데 우리는 인증을 해야 한다. 인증을 해야할 부분이 바로 `onConnect` 이다. 그런데 `connectionParams` 는 어떤 정보가 있을까? 출력을 해보면 다음과 같다.
+- 그리고 `onConnect` 은 WebSocket 연결이 완료되면 실행할 비동기 함수다. 그런데 우리는 인증을 해야 한다. 인증을 해야할 부분이 바로 `onConnect` 이다. 그런데 `connectionParams` 는 어떤 정보가 있을까? 출력을 해보면 다음과 같다.
   <img src="https://drive.google.com/uc?id=1qplFltAD5i62cQgyJsYOyZjPwuE4SNLI" alt="onConnect Arguments Test" width="600">
 - Token 이 출력되는데 바로 인증이라는 것을 알게된다. 이것을 Decode 하면 우리가 실제로 필요한 `currentUser` 라는 속성으로 사용자 정보를 전달하게 된다.
 
@@ -3057,8 +3058,6 @@ export default resolvers;
 <img src="https://drive.google.com/uc?id=1z-Nv7GDp_1Xym9n8KYcwX77RcOfQB3qq" alt="Driver Subscription Test 05" width="960">
 
 만일 `lastLat`, `lastLng` 각각 0.05 를 훨씬 벗어나는 값으로 작동시키면 다음과 같이 반응이 없다.
-
-<img src="https://drive.google.com/uc?id=17oUrLmv_tZZbUd1alXpbHB80W5EPmHB9" alt="Driver Subscription Test 06" width="960">
 
 ----
 
@@ -3837,7 +3836,7 @@ class User extends BaseEntity {
 ...
 ```
 
-`User.ts` 에서는 `@OneToMany` 로 한명의 사용자가 다수의 `Chat` 상대를 가질 수 있게 한다. 대화상대가 운전자이거나 승객일 수 있다. 지금까지 이렇게 수정한 이유는 새로운 채팅방을 만들고 `Chat` 에 사용자를 추가하기에 더 좋기 때문이다. 마지막으로 User.graphql, Chat.graphql 도 수정해줘야 한다.
+`User.ts` 에서는 `@OneToMany` 로 한명의 사용자가 다수의 `Chat` 상대를 가질 수 있게 한다. 대화상대가 운전자이거나 승객일 수 있다. 지금까지 이렇게 수정한 이유는 새로운 채팅방을 만들고 `Chat` 에 사용자를 추가하기에 더 좋기 때문이다. 마지막으로 `User.graphql`, `Chat.graphql` 도 수정해줘야 한다.
 
 #### User.graphql
 ```graphql
@@ -3873,6 +3872,7 @@ type Chat {
 
 ```typescript
 import Chat from "../../../entities/Chat";
+
 ...
 
 const resolvers: Resolvers = {
@@ -3884,21 +3884,18 @@ const resolvers: Resolvers = {
         { req, pubSub },
       ): Promise<UpdateRideStatusResponse> => {
         const user: User = req.user;
-        // 사용자가 Driver 인 경우, 운전자(Driver)가 탑승한(Ride) 경우와 승객(Passenger)이 탑승한 경우를 따져야 함
         if (user.isDriving) {
           try {
             let ride: Ride | undefined;
-            // Driver 가 탑승을 승인(ACCEPTED)할 경우
             if (args.status === "ACCEPTED") {
               ride = await Ride.findOne(
                 {
                   id: args.rideId,
-                  status: "REQUESTING", // 중복 수락이 되지 않도록 요청중인 상태로 변경해야 한다.
+                  status: "REQUESTING",
                 },
-                { relations: ["passenger"] },
+                { relations: ["passenger"] }, // 승객과의 채팅을 위해 passenger 관계 설정을 해준다.
               );
               if (ride) {
-                // 탑승 사용자는 운전자로서 결정되고 저장된다.
                 ride.driver = user;
                 user.isTaken = true;
                 user.save();
@@ -3910,7 +3907,7 @@ const resolvers: Resolvers = {
               }
             
             ...
-            
+
         }
       },
     ),
@@ -3919,3 +3916,6 @@ const resolvers: Resolvers = {
 
 export default resolvers;
 ```
+
+----
+

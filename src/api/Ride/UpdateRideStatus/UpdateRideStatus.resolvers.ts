@@ -28,7 +28,7 @@ const resolvers: Resolvers = {
 									id: args.rideId,
 									status: "REQUESTING", // 중복 수락이 되지 않도록 요청중인 상태로 변경해야 한다.
 								},
-								{ relations: ["passenger"] },
+								{ relations: ["passenger"] }, // 승객과의 채팅을 위해 passenger 관계 설정을 해준다.
 							);
 							if (ride) {
 								// 탑승 사용자는 운전자로서 결정되고 저장된다.
