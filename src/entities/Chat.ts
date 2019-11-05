@@ -5,10 +5,12 @@ import {
 	Entity,
 	ManyToOne,
 	OneToMany,
+	OneToOne,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn,
 } from "typeorm";
 import Message from "./Message";
+import Ride from "./Ride";
 import User from "./User";
 
 // 하나의 Chat에서 다수의 메세지, 다수의 사용자를 가지도록 한다.
@@ -31,6 +33,13 @@ class Chat extends BaseEntity {
 	// 다수의 Chat은 하나의 User(Passenger, Driver)를 가진다.
 	@ManyToOne(type => User, user => user.chatsAsPassenger)
 	passenger: User;
+
+	// 채팅방에서는 어떤 탑승자와 대화를 하는지 알아야 하는 탑승자 식별자를 가진다.
+	@Column({ nullable: true })
+	rideId: number;
+
+	@OneToOne(type => Ride, ride => ride.chat)
+	ride: Ride;
 
 	@Column({ nullable: true })
 	driverId: number;

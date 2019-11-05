@@ -3307,7 +3307,7 @@ const resolvers: Resolvers = {
       ): Promise<RequestRideResponse> => {
         const user: User = req.user;
         // 사용자가 탑승중이 아닌 경우에만 탑승이 가능하도록, 중복 탑승은 없다.
-        if (!user.isRiding) {
+        if (!user.isRiding || !user.isDriving) {
           try {
             const ride = await Ride.create({ ...args, passenger: user }).save();
             pubSub.publish("rideRequest", { NearbyRideSubscription: ride });
@@ -3919,3 +3919,118 @@ export default resolvers;
 
 ----
 
+## #1.82 GetChat Resolver
+
+#### GetChat.graphql
+```graphql
+type GetChatResponse{
+  ok: Boolean,
+  error: String,
+  chat: Chat
+}
+
+type Query {
+  GetChat(chatId: Int!): GetChatResponse!
+}
+```
+
+#### GetChat.resolvers.ts
+```typescript
+import Chat from "../../../entities/Chat";
+import User from "../../../entities/User";
+import { GetChatQueryArgs, GetChatResponse } from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Query: {
+    GetChat: privateResolver(
+      async (_, args: GetChatQueryArgs, { req }): Promise<GetChatResponse> => {
+        const user: User = req.user;
+        try {
+          const chat = await Chat.findOne({
+            id: args.chatId,
+          });
+          if (chat) {
+            if (chat.passengerId === user.id || chat.driverId === user.id) {
+              return {
+                ok: true,
+                error: null,
+                chat,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "인증되지 않은 채팅방입니다.",
+                chat: null,
+              };
+            }
+          } else {
+            return {
+              ok: false,
+              error: "Not found.",
+              chat: null,
+            };
+          }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            chat: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+채팅방에 어떤 탑승자가 있는지 확인해야 한다. 그런데 우리는 Chat 과 Ride 간에 관계를 설정하지 않았다. 관계를 설정해야 어느 채팅방에 속해있는지 알 수 있다. 그리고 채팅방과 사용자는 1 대 1 관계이다. 그래서 @OneToOne 으로 관계를 만든다.
+
+
+
+그리고 처음부터 Ride 에는 Chat 이 없으니 { nullable: true } 로 설정한다. 결국 Ride 상태가 REQUESTING 상태라면 Chat 이 없는 것이 정상이다.
+
+그리고 Chat 만들 때에는 Ride 에 chat 을 포함시키자.
+
+
+UpdateRideStatus 에서 생성된 채팅방을 ride 와 연결시킨다. 이제 탑승자는 자신이 어느 채팅방에 있는지 안다.
+
+```graphql
+type Chat {
+  id: Int!
+  messages: [Message]
+  passengerId: Int!
+  passenger: User!
+  driverId: Int!
+  driver: User!
+  ride: Ride! # 추가된 부분
+  createdAt: String!
+  updatedAt: String
+}
+```
+
+```graphql
+type Ride {
+  id: Int!
+  status: String!
+  pickUpAddress: String!
+  pickUpLat: Float!
+  pickUpLng: Float!
+  dropOffAddress: String!
+  dropOffLat: Float!
+  dropOffLng: Float!
+  price: Float!
+  distance: String!
+  duration: String!
+  driver: User!
+  driverId: Int
+  passenger: User!
+  passengerId: Int!
+  chat: Chat! # 추가된 부분
+  createdAt: String!
+  updatedAt: String
+}
+```

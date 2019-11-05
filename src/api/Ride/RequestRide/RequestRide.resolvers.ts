@@ -17,7 +17,7 @@ const resolvers: Resolvers = {
 			): Promise<RequestRideResponse> => {
 				const user: User = req.user;
 				// 사용자가 탑승중이 아닌 경우에만 탑승이 가능하도록, 중복 탑승은 없다.
-				if (!user.isRiding) {
+				if (!user.isRiding || !user.isDriving) {
 					try {
 						const ride = await Ride.create({ ...args, passenger: user }).save();
 						pubSub.publish("rideRequest", { NearbyRideSubscription: ride });

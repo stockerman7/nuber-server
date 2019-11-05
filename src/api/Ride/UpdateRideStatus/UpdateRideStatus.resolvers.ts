@@ -36,10 +36,13 @@ const resolvers: Resolvers = {
 								user.isTaken = true;
 								user.save();
 								// 운전자가 탑승을 수락했기 때문에 새로운 채팅방이 생성된다.
-								await Chat.create({
+								const chat = await Chat.create({
 									driver: user,
 									passenger: ride.passenger,
 								}).save();
+								// 생성된 채팅방을 ride 와 연결시킨다. 이제 탑승자는 자신이 어느 채팅방에 있는지 안다.
+								ride.chat = chat;
+								ride.save();
 							}
 						} else {
 							ride = await Ride.findOne({
