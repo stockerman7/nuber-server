@@ -8,11 +8,14 @@ const resolvers: Resolvers = {
 	Query: {
 		GetChat: privateResolver(
 			async (_, args: GetChatQueryArgs, { req }): Promise<GetChatResponse> => {
-        const user: User = req.user;
+				const user: User = req.user;
 				try {
-					const chat = await Chat.findOne({
-						id: args.chatId,
-					});
+					const chat = await Chat.findOne(
+						{
+							id: args.chatId,
+						},
+						{ relations: ["driver", "passenger", "messages"] }, // chat 과 driver, passenger 관계 연결
+					);
 					if (chat) {
 						if (chat.passengerId === user.id || chat.driverId === user.id) {
 							return {

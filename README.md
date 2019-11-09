@@ -4034,3 +4034,185 @@ type Ride {
   updatedAt: String
 }
 ```
+
+----
+
+## #1.84 Testing GetChat Resolver
+
+이제 `RequestRide` 탑승 요청이 이루어지면 `UpdateRideStatus` 로 탑승 수락이 이루어져야 Chat 이 생성된다. 그리고 생성된 Chat 은 Ride 와 연결될 것이라고 예상된다.
+
+
+위 결과 처럼 `UpdateRideStatus` 에서 탑승 상태가 `"ACCEPTED"` 로 변경되고 `GetRide` 에서 `chatId` 가 생긴 것을 볼 수 있다.
+
+
+이제 새로 생성된 Chat 이 활성화 되었는지 `GetChat` 을 이용해 확인해 보자.
+
+
+그런데 `driver` 속성으로 `fullName` 을 가져오려고 하면 에러가 나온다. 이것은 Chat 에 Driver, Passenger 간의 관계를 설정하지 않았기 때문이다. GetChat Resolver 에서 `relations` 으로 `driver`, `passenger` 를 연결해야 한다.
+
+
+```typescript
+const resolvers: Resolvers = {
+  Query: {
+    GetChat: privateResolver(
+      async (_, args: GetChatQueryArgs, { req }): Promise<GetChatResponse> => {
+        const user: User = req.user;
+        try {
+          const chat = await Chat.findOne(
+            {
+              id: args.chatId,
+            },
+            { relations: ["driver", "passenger"] }, // chat 과 driver, passenger 관계 연결
+          );
+
+          ...
+
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            chat: null,
+          };
+        }
+      },
+    ),
+  },
+};
+```
+
+다음과 같이 `driver`, `passenger` 의 `fullName` 이 조회 되었다.
+
+
+
+만약 Chat 의 대화 내용인 Messages 가 무엇인지 알고 싶다면 `GetChat` 에서 `relations` 속성으로 `["messages"]` 를 추가해야 한다.
+
+----
+
+## #1.85 SendChatMessage Resolver
+
+#### SendChatMessage.graphql
+```graphql
+type SendChatMessageResponse {
+  ok: Boolean!
+  error: String
+  message: Message
+}
+
+type Mutation {
+  SendChatMessage(text: String!, chatId: Int!): SendChatMessageResponse!
+}
+```
+
+#### SendChatMessage.resolvers.ts
+```typescript
+import Chat from "../../../entities/Chat";
+import Message from "../../../entities/Message";
+import User from "../../../entities/User";
+import {
+  SendChatMessageMutationArgs,
+  SendChatMessageResponse,
+} from "../../../types/graph";
+import { Resolvers } from "../../../types/resolvers";
+import privateResolver from "../../../utils/privateResolver";
+
+const resolvers: Resolvers = {
+  Mutation: {
+    SendChatMessage: privateResolver(
+      async (
+        _,
+        args: SendChatMessageMutationArgs,
+        { req },
+      ): Promise<SendChatMessageResponse> => {
+        const user: User = req.user;
+        try {
+          // 채티방이 없을 때 메세지를 보낼 수 없도록 먼저 검사
+          const chat = await Chat.findOne({ id: args.chatId });
+          console.log(chat);
+          if (chat) {
+            // 그리고 사용자가 해당 채팅방에 속해있는지 확인
+            if (chat.passengerId === user.id || chat.driverId === user.id) {
+              const message = await Message.create({
+                text: args.text,
+                chat,
+                user,
+              }).save();
+              return {
+                ok: true,
+                error: null,
+                message,
+              };
+            } else {
+              return {
+                ok: false,
+                error: "인증되지 않은 사용자 입니다.",
+                message: null,
+              };
+            }
+          } else {
+            return {
+              ok: false,
+              error: "채팅방을 찾을 수 없습니다.",
+              message: null,
+            };
+          }
+        } catch (error) {
+          return {
+            ok: false,
+            error: error.message,
+            message: null,
+          };
+        }
+      },
+    ),
+  },
+};
+
+export default resolvers;
+```
+
+----
+
+## #1.86 MessageSubscription
+
+#### MessageSubscription.graphql
+```graphql
+type Subscription {
+  MessageSubscription: Message
+}
+```
+
+#### MessageSubscription.resolvers.ts
+```typescript
+import { withFilter } from "graphql-yoga";
+import Chat from "../../../entities/Chat";
+import User from "../../../entities/User";
+
+const resolvers = {
+  Subscription: {
+    MessageSubscription: {
+      subscribe: withFilter(
+        (_, __, { pubSub }) => pubSub.asyncIterator("newChatMessage"),
+        async (payload, _, { context }) => {
+          const user: User = context.currentUser;
+          const {
+            MessageSubscription: { chatId },
+          } = payload;
+          try {
+            // 데이터로 들어오는 chatId 를 이용해 id 에 해당하는 Chat 을 찾는다.
+            const chat = await Chat.findOne({ id: chatId });
+            if (chat) {
+              return chat.driverId === user.id || chat.passengerId === user.id;
+            } else {
+              return false;
+            }
+          } catch (error) {
+            return false;
+          }
+        },
+      ),
+    },
+  },
+};
+
+export default resolvers;
+```
