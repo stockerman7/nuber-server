@@ -46,5 +46,5 @@
 
 ## Nuber 클론 코딩 정리
 
-Nuber 클론 코딩 백앤드 정리 : [Nuber Backend Note](nuber-server/blob/master/nuber-server/notes/Nuber_Backend.md) <br>
-Nuber 클론 코딩 프론트앤드 정리 : [Nuber Frontend Note](nuber-server/blob/master/nuber-server/notes/Nuber_Backend.md)
+Nuber 클론 코딩 백앤드 정리 : [Nuber Backend Note](/notes/Nuber_Backend.md) <br>
+Nuber 클론 코딩 프론트앤드 정리 : [Nuber Frontend Note](/notes/Nuber_Frontend.md)
