@@ -18,9 +18,8 @@ const resolvers: Resolvers = {
 			): Promise<SendChatMessageResponse> => {
 				const user: User = req.user;
 				try {
-					// 채티방이 없을 때 메세지를 보낼 수 없도록 먼저 검사
+					// 채팅방이 없을 때 메세지를 보낼 수 없도록 먼저 검사
 					const chat = await Chat.findOne({ id: args.chatId });
-					console.log(chat);
 					if (chat) {
 						// 그리고 사용자가 해당 채팅방에 속해있는지 확인
 						if (chat.passengerId === user.id || chat.driverId === user.id) {
